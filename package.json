@@ -19,14 +19,18 @@
   },
   "homepage": "./README.md",
   "scripts": {
-    "start": "python -m http.server 8000",
-    "start:node": "npx http-server -p 8000",
-    "dev": "python -m http.server 8000",
-    "server": "python -m http.server 8000",
+    "start": "node server.js",
+    "start:local": "python -m http.server 8000",
+    "dev": "node server.js",
+    "server": "node server.js",
     "docs": "echo 'See README.md and ASSETS_MANIFEST.md for documentation'"
   },
-  "devDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^5.2.1"
+  },
   "files": [
     "index.html",
     "assets/",

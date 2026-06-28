@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Enroll in Online Banking - Bank of America</title>
+    <link rel="shortcut icon" href="./assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="./assets/css/vipaa-v4-jawr.css" media="all">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 15px;
+            color: #333;
+            font-size: 16px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 15px;
+        }
+        .header img {
+            height: 35px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .content {
+            padding: 25px;
+        }
+        @media (min-width: 640px) {
+            body { padding: 20px; }
+            .header { margin-bottom: 40px; padding-top: 20px; }
+            .header img { height: 40px; margin-bottom: 20px; }
+            .content { padding: 40px; }
+        }
+        h1 {
+            color: #003366;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 24px;
+            line-height: 1.3;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 28px; }
+        }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        @media (min-width: 640px) {
+            .subtitle { font-size: 16px; margin-bottom: 30px; }
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section h2 {
+            color: #003366;
+            font-size: 18px;
+            border-bottom: 2px solid #012169;
+            padding-bottom: 10px;
+            margin-top: 25px;
+        }
+        .section:first-of-type h2 {
+            margin-top: 0;
+        }
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        @media (min-width: 640px) {
+            .timeline-item { margin-bottom: 30px; }
+        }
+        .timeline-item:not(:last-child):after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 45px;
+            width: 2px;
+            height: 25px;
+            background: #ccc;
+        }
+        @media (min-width: 640px) {
+            .timeline-item:not(:last-child):after { left: 18px; top: 50px; height: 30px; }
+        }
+        .timeline-number {
+            background: #012169;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+        @media (min-width: 640px) {
+            .timeline-number { width: 40px; height: 40px; margin-right: 20px; font-size: 18px; }
+        }
+        .timeline-content h3 {
+            margin: 0 0 6px 0;
+            color: #003366;
+            font-size: 14px;
+        }
+        @media (min-width: 640px) {
+            .timeline-content h3 { margin: 0 0 8px 0; font-size: 16px; }
+        }
+        .timeline-content p {
+            margin: 0;
+            color: #666;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        @media (min-width: 640px) {
+            .timeline-content p { font-size: 14px; }
+        }
+        .benefits {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        @media (min-width: 640px) {
+            .benefits { grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        }
+        @media (min-width: 1024px) {
+            .benefits { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        }
+        .benefit-card {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #012169;
+            font-size: 13px;
+        }
+        @media (min-width: 640px) {
+            .benefit-card { padding: 20px; font-size: 14px; }
+        }
+        .benefit-card h3 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        @media (min-width: 640px) {
+            .benefit-card h3 { font-size: 16px; margin-bottom: 8px; }
+        }
+        .benefit-card p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        @media (min-width: 640px) {
+            .benefit-card p { font-size: 14px; }
+        }
+        .benefits-icon {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        @media (min-width: 640px) {
+            .benefits-icon { font-size: 24px; margin-bottom: 10px; }
+        }
+        .requirements {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        @media (min-width: 640px) {
+            .requirements { padding: 20px; margin: 20px 0; font-size: 16px; }
+        }
+        .requirements h3 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 15px;
+        }
+        @media (min-width: 640px) {
+            .requirements h3 { font-size: 16px; }
+        }
+        .requirements ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+        @media (min-width: 640px) {
+            .requirements ul { margin: 10px 0; padding-left: 20px; }
+        }
+        .requirements li {
+            margin: 6px 0;
+            color: #666;
+            font-size: 13px;
+        }
+        @media (min-width: 640px) {
+            .requirements li { margin: 8px 0; font-size: 14px; }
+        }
+        .info-box {
+            background: #f0f4f8;
+            border-left: 4px solid #012169;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            color: #003366;
+        }
+        .button-group {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #012169;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #001a4d;
+        }
+        .btn-secondary {
+            background: white;
+            color: #012169;
+            border: 2px solid #012169;
+        }
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+        .security-note {
+            background: #e8f4f8;
+            border: 1px solid #b3e5fc;
+            border-radius: 4px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        .security-note strong {
+            color: #01579b;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .faq {
+            margin-top: 30px;
+        }
+        .faq-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-item strong {
+            color: #003366;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .contact-info {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+        .contact-info h3 {
+            color: #003366;
+            margin-top: 0;
+        }
+        .back-link {
+            margin: 20px 0 0 0;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .back-link a {
+            color: #012169;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img alt="Bank of America" src="./assets/images/BofA_rgb.png">
+        <h1 style="margin: 15px 0 5px 0;">Enroll in Online Banking</h1>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h1>Get Started with Online Banking</h1>
+            <p class="subtitle">Manage your finances anytime, anywhere. Enrollment takes just a few minutes.</p>
+
+            <div class="section">
+                <h2>Why Enroll Today?</h2>
+                <div class="benefits">
+                    <div class="benefit-card">
+                        <div class="benefits-icon">💻</div>
+                        <h3>24/7 Access</h3>
+                        <p>Access your accounts anytime from any device, day or night</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefits-icon">💰</div>
+                        <h3>Easy Transfers</h3>
+                        <p>Transfer funds between accounts instantly with just a few clicks</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefits-icon">💳</div>
+                        <h3>Bill Pay</h3>
+                        <p>Pay your bills online and set up automatic payments</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefits-icon">📱</div>
+                        <h3>Mobile App</h3>
+                        <p>Download our app for banking on the go with full features</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefits-icon">📊</div>
+                        <h3>Account Management</h3>
+                        <p>View balances, statements, and transaction history instantly</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefits-icon">🔒</div>
+                        <h3>Secure & Safe</h3>
+                        <p>Bank-level security with encryption and fraud protection</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>What You'll Need to Get Started</h2>
+                <div class="requirements">
+                    <h3>Before You Begin</h3>
+                    <ul>
+                        <li><strong>Active Bank of America Account</strong> - Checking, savings, or credit card account in good standing</li>
+                        <li><strong>Social Security Number</strong> - For identity verification</li>
+                        <li><strong>Valid Government ID</strong> - For additional security verification if needed</li>
+                        <li><strong>Account Access</strong> - Your account number and routing number (found on your checks or statements)</li>
+                        <li><strong>Current Contact Information</strong> - Phone number and email address</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Enrollment Process</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-number">1</div>
+                        <div class="timeline-content">
+                            <h3>Create Your User ID</h3>
+                            <p>Choose a memorable User ID that you'll use to log in. It must be 5-32 characters and cannot contain special characters.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">2</div>
+                        <div class="timeline-content">
+                            <h3>Set Your Password</h3>
+                            <p>Create a strong password with uppercase, lowercase, numbers, and special characters (minimum 8 characters). This is critical for account security.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">3</div>
+                        <div class="timeline-content">
+                            <h3>Verify Your Identity</h3>
+                            <p>Complete identity verification using your Social Security Number and personal information. You may be asked to verify a deposit or answer security questions.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">4</div>
+                        <div class="timeline-content">
+                            <h3>Choose Security Questions</h3>
+                            <p>Select and answer security questions that only you would know the answer to. These help protect your account if you forget your password.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">5</div>
+                        <div class="timeline-content">
+                            <h3>Link Your Accounts</h3>
+                            <p>Select which Bank of America accounts you want to access online. You can add or remove accounts anytime after enrollment.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-number">6</div>
+                        <div class="timeline-content">
+                            <h3>Start Banking Online</h3>
+                            <p>Confirmation will be sent to your email. You're all set! Log in and start enjoying the benefits of online banking.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Quick Enrollment</h2>
+                <div class="button-group">
+                    <button class="btn btn-primary">Start Enrollment Now</button>
+                    <button class="btn btn-secondary">Learn More</button>
+                </div>
+                <p style="text-align: center; color: #666;">Already a customer? Use your account number to speed up the process.</p>
+            </div>
+
+            <div class="section">
+                <h2>Enrollment Requirements</h2>
+                <div class="info-box">
+                    <strong>Age Requirement:</strong> You must be at least 18 years old to enroll in online banking. A parent or guardian may enroll for customers under 18 if they are joint account holders.
+                </div>
+                <div class="info-box">
+                    <strong>Account Status:</strong> Your account must be in good standing with no restrictions or holds placed on the account.
+                </div>
+                <div class="info-box">
+                    <strong>Verification:</strong> Bank of America may contact you via phone or email to verify your identity as part of the enrollment process.
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>After You Enroll</h2>
+                <div class="security-note">
+                    <strong>✓ What's Available Immediately</strong>
+                    <p>View account balances and transaction history • Check pending transactions • Download statements • Look up routing numbers • View account details</p>
+                </div>
+                <div class="security-note">
+                    <strong>✓ Additional Features After 24-48 Hours</strong>
+                    <p>Bill pay setup • External account transfers • Account to account transfers • Mobile check deposit • Appointment scheduling</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq">
+                    <div class="faq-item">
+                        <strong>Q: Is online banking safe?</strong>
+                        <p>A: Yes. Bank of America uses advanced security measures including 128-bit encryption, multi-factor authentication, and real-time fraud monitoring to protect your accounts.</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Q: How long does enrollment take?</strong>
+                        <p>A: Enrollment typically takes 5-10 minutes to complete. Your full online banking access may be enabled within 24-48 hours.</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Q: Can I enroll if I have multiple accounts?</strong>
+                        <p>A: Yes. You can enroll with one User ID and add multiple Bank of America accounts during the enrollment process or anytime afterward.</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Q: Do I need to be a specific account type to enroll?</strong>
+                        <p>A: No. You can enroll if you have a checking account, savings account, credit card, or other Bank of America products.</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Q: Can I use the same User ID for business and personal accounts?</strong>
+                        <p>A: No. Business accounts require a separate enrollment with different login credentials for security purposes.</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Q: What if I can't enroll online?</strong>
+                        <p>A: Visit your local branch or call us at 1-800-742-5850. A representative can help you complete your enrollment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h3>Need Help Enrolling?</h3>
+                <p><strong>Phone Support:</strong> 1-800-742-5850 (24/7)</p>
+                <p><strong>Visit a Branch:</strong> Stop by any Bank of America location with your ID</p>
+                <p><strong>Online Chat:</strong> Chat with a specialist during business hours at bankofamerica.com</p>
+                <p><strong>TTY/TDD:</strong> 1-800-435-1970 (for hearing impaired customers)</p>
+            </div>
+
+            <div class="back-link">
+                <a href="./index.html">← Back to Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

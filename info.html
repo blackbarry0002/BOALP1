@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Help Center & Information - Bank of America Online Banking</title>
+    <link rel="shortcut icon" href="./assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="./assets/css/vipaa-v4-jawr.css" media="all">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 15px;
+            color: #333;
+            font-size: 16px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 15px;
+        }
+        .header img {
+            height: 35px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .content {
+            padding: 25px;
+        }
+        @media (min-width: 640px) {
+            body { padding: 20px; }
+            .header { margin-bottom: 40px; padding-top: 20px; }
+            .header img { height: 40px; margin-bottom: 20px; }
+            .content { padding: 40px; }
+        }
+        h1 {
+            color: #003366;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section h2 {
+            color: #003366;
+            font-size: 18px;
+            border-bottom: 2px solid #012169;
+            padding-bottom: 10px;
+            margin-top: 25px;
+        }
+        .section:first-of-type h2 {
+            margin-top: 0;
+        }
+        .quick-links {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        @media (min-width: 640px) {
+            .quick-links { grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        }
+        @media (min-width: 1024px) {
+            .quick-links { grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        }
+        .quick-link-card {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        @media (min-width: 640px) {
+            .quick-link-card { padding: 20px; }
+        }
+        .quick-link-card:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dfe3e8 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .quick-link-card .icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .quick-link-card h3 {
+            margin: 0 0 8px 0;
+            color: #003366;
+            font-size: 16px;
+        }
+        .quick-link-card p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .help-categories {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        @media (min-width: 640px) {
+            .help-categories { grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        }
+        @media (min-width: 1024px) {
+            .help-categories { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        }
+        .category-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #012169;
+        }
+        .category-card h3 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 14px;
+        }
+        @media (min-width: 640px) {
+            .category-card h3 { font-size: 16px; }
+        }
+        .category-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .category-card li {
+            padding: 6px 0;
+            color: #666;
+            border-bottom: 1px solid #ddd;
+            font-size: 12px;
+        }
+        @media (min-width: 640px) {
+            .category-card li { padding: 8px 0; font-size: 14px; }
+        }
+        .category-card li:last-child {
+            border-bottom: none;
+        }
+        .category-card a {
+            color: #012169;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .category-card a:hover {
+            text-decoration: underline;
+        }
+        .info-box {
+            background: #f0f4f8;
+            border-left: 4px solid #012169;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            color: #003366;
+        }
+        .security-banner {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .security-banner h3 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .security-banner ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .security-banner li {
+            margin: 8px 0;
+            color: #333;
+        }
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        @media (min-width: 768px) {
+            .faq-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+        }
+        .faq-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        .faq-card h4 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 14px;
+        }
+        .faq-card p {
+            margin: 10px 0 0 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        .features-list li {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #012169;
+            color: #666;
+        }
+        .features-list strong {
+            color: #003366;
+        }
+        .contact-support {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+        .contact-support h3 {
+            color: #003366;
+            margin-top: 0;
+        }
+        .contact-methods {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        @media (min-width: 640px) {
+            .contact-methods { grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        }
+        @media (min-width: 1024px) {
+            .contact-methods { grid-template-columns: repeat(3, 1fr); }
+        }
+        .contact-method {
+            padding: 15px;
+            background: white;
+            border: 1px solid #b3e5fc;
+            border-radius: 4px;
+        }
+        .contact-method strong {
+            color: #003366;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .back-link {
+            margin: 20px 0 0 0;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .back-link a {
+            color: #012169;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img alt="Bank of America" src="./assets/images/BofA_rgb.png">
+        <h1 style="margin: 15px 0 5px 0;">Help Center & Information</h1>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h1>Everything You Need to Know</h1>
+            <p class="subtitle">Find answers, tutorials, and resources about Bank of America Online Banking.</p>
+
+            <div class="section">
+                <h2>Quick Links</h2>
+                <div class="quick-links">
+                    <div class="quick-link-card">
+                        <div class="icon">🔐</div>
+                        <h3>Security Tips</h3>
+                        <p>Learn how to keep your account safe</p>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="icon">📱</div>
+                        <h3>Mobile Banking</h3>
+                        <p>Download and use the mobile app</p>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="icon">💰</div>
+                        <h3>Money Management</h3>
+                        <p>Budgeting and savings tools</p>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="icon">🎯</div>
+                        <h3>Financial Planning</h3>
+                        <p>Plan for your financial future</p>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="icon">📧</div>
+                        <h3>Email & Alerts</h3>
+                        <p>Manage your notifications</p>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="icon">🏦</div>
+                        <h3>Branch Locator</h3>
+                        <p>Find a location near you</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Getting Started</h2>
+                <div class="help-categories">
+                    <div class="category-card">
+                        <h3>Account Basics</h3>
+                        <ul>
+                            <li><a href="#">Logging in to Online Banking</a></li>
+                            <li><a href="#">Resetting your password</a></li>
+                            <li><a href="#">Viewing your account balance</a></li>
+                            <li><a href="#">Managing account settings</a></li>
+                            <li><a href="#">Adding accounts</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-card">
+                        <h3>Transactions & Transfers</h3>
+                        <ul>
+                            <li><a href="#">Transferring funds between accounts</a></li>
+                            <li><a href="#">Paying bills online</a></li>
+                            <li><a href="#">Setting up recurring payments</a></li>
+                            <li><a href="#">Checking transaction history</a></li>
+                            <li><a href="#">Canceling a payment</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-card">
+                        <h3>Mobile & Devices</h3>
+                        <ul>
+                            <li><a href="#">Downloading the mobile app</a></li>
+                            <li><a href="#">Mobile check deposit</a></li>
+                            <li><a href="#">Setting up mobile alerts</a></li>
+                            <li><a href="#">Using mobile wallet</a></li>
+                            <li><a href="#">Device security</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-card">
+                        <h3>Security & Protection</h3>
+                        <ul>
+                            <li><a href="#">Fraud protection</a></li>
+                            <li><a href="#">Reporting unauthorized transactions</a></li>
+                            <li><a href="#">Password security</a></li>
+                            <li><a href="#">Multi-factor authentication</a></li>
+                            <li><a href="#">Keeping your account safe</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-card">
+                        <h3>Cards & Credit</h3>
+                        <ul>
+                            <li><a href="#">Managing credit cards</a></li>
+                            <li><a href="#">Making a credit card payment</a></li>
+                            <li><a href="#">Rewards and benefits</a></li>
+                            <li><a href="#">Credit limit increases</a></li>
+                            <li><a href="#">Card activation</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="category-card">
+                        <h3>Investing & Planning</h3>
+                        <ul>
+                            <li><a href="#">Investment options</a></li>
+                            <li><a href="#">Retirement planning</a></li>
+                            <li><a href="#">Financial advisors</a></li>
+                            <li><a href="#">Brokerage services</a></li>
+                            <li><a href="#">Savings goals</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Online Banking Features</h2>
+                <ul class="features-list">
+                    <li><strong>Bill Pay:</strong> Pay bills online to anyone in the U.S. Setup is quick and easy, with delivery options from 1-3 business days.</li>
+                    <li><strong>Account Aggregation:</strong> View all your financial accounts in one place, even if they're with other institutions.</li>
+                    <li><strong>Mobile Check Deposit:</strong> Deposit checks instantly using your smartphone's camera.</li>
+                    <li><strong>eStatements:</strong> Go paperless with electronic statements delivered securely to your inbox.</li>
+                    <li><strong>Account Alerts:</strong> Receive real-time notifications about account activity, low balances, and more.</li>
+                    <li><strong>Transaction Search:</strong> Easily search and filter transactions by date, amount, or description.</li>
+                    <li><strong>Financial Tools:</strong> Access budgeting tools, spending analysis, and savings calculators.</li>
+                    <li><strong>Credit Score Tracking:</strong> Monitor your credit score and get tips to improve it.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>Security & Safety</h2>
+                <div class="security-banner">
+                    <h3>🔒 Protecting Your Account</h3>
+                    <p>Bank of America uses industry-leading security measures to protect your information:</p>
+                    <ul>
+                        <li><strong>128-bit Encryption:</strong> Your data is encrypted during transmission</li>
+                        <li><strong>Multi-Factor Authentication:</strong> Extra layer of security beyond your password</li>
+                        <li><strong>Fraud Monitoring:</strong> 24/7 real-time fraud detection on your accounts</li>
+                        <li><strong>Secure Login:</strong> Identity verification before you access your accounts</li>
+                        <li><strong>Liability Protection:</strong> Federal protection against unauthorized transactions</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <strong>Security Best Practices:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Never share your User ID or password with anyone</li>
+                        <li>Use a strong, unique password with mixed characters</li>
+                        <li>Log out when finished, especially on shared computers</li>
+                        <li>Keep your contact information current</li>
+                        <li>Review your account regularly for suspicious activity</li>
+                        <li>Enable multi-factor authentication</li>
+                        <li>Be cautious of phishing emails and unsolicited calls</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-grid">
+                    <div class="faq-card">
+                        <h4>Q: How do I reset my password?</h4>
+                        <p>Click "Forgot User ID or Password?" on the login screen, answer security questions, and follow the prompts to reset your password.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: Is Online Banking free?</h4>
+                        <p>Yes, Online Banking is free for all Bank of America customers. Standard data rates may apply when using mobile devices.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: How long do bill payments take?</h4>
+                        <p>Typically 1-3 business days depending on the payee. Express payments (1 business day) may have additional fees.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: Can I set up recurring payments?</h4>
+                        <p>Yes. Bill Pay allows you to schedule automatic payments for regular bills like utilities, mortgage, or rent.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: Is mobile banking secure?</h4>
+                        <p>Yes. Mobile banking uses the same 128-bit encryption and fraud protection as Online Banking for maximum security.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: What if I don't recognize a transaction?</h4>
+                        <p>Contact us immediately at 1-800-742-5850. We have fraud protection and can help dispute unauthorized transactions.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: Can I access my accounts from outside the U.S.?</h4>
+                        <p>Yes, but we recommend notifying us of international travel. Your account may have security restrictions.</p>
+                    </div>
+
+                    <div class="faq-card">
+                        <h4>Q: How often should I change my password?</h4>
+                        <p>We recommend changing your password at least every 90 days for optimal security.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Service Agreement & Terms</h2>
+                <div class="info-box">
+                    <strong>Important Documents:</strong>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li><a href="#">Online Banking Service Agreement</a> - Terms and conditions for Online Banking</li>
+                        <li><a href="#">Privacy Notice</a> - How we collect and use your information</li>
+                        <li><a href="#">Electronic Funds Transfer Act</a> - Your rights and responsibilities</li>
+                        <li><a href="#">Fee Schedule</a> - Current fees for Bank of America products and services</li>
+                        <li><a href="#">Deposit Products Disclosure</a> - Information about deposit accounts</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="contact-support">
+                <h3>Can't Find What You're Looking For?</h3>
+                <p>Our customer service team is available 24/7 to help answer your questions about Online Banking:</p>
+                
+                <div class="contact-methods">
+                    <div class="contact-method">
+                        <strong>📞 Phone</strong>
+                        <p>1-800-742-5850</p>
+                        <p style="font-size: 12px; color: #666; margin: 0;">24 hours a day, 7 days a week</p>
+                    </div>
+
+                    <div class="contact-method">
+                        <strong>💬 Online Chat</strong>
+                        <p>Available during business hours at bankofamerica.com</p>
+                    </div>
+
+                    <div class="contact-method">
+                        <strong>🏦 Visit a Branch</strong>
+                        <p>Find a nearby location at bankofamerica.com</p>
+                    </div>
+
+                    <div class="contact-method">
+                        <strong>📧 Email</strong>
+                        <p>Use contact form at bankofamerica.com</p>
+                    </div>
+
+                    <div class="contact-method">
+                        <strong>📱 Mobile App</strong>
+                        <p>Send a message directly from the app</p>
+                    </div>
+
+                    <div class="contact-method">
+                        <strong>♿ TTY/TDD</strong>
+                        <p>1-800-435-1970 for hearing impaired</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="back-link">
+                <a href="./index.html">← Back to Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

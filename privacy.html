@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Privacy & Data Management - Bank of America Online Banking</title>
+    <link rel="shortcut icon" href="./assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="./assets/css/vipaa-v4-jawr.css" media="all">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            margin: 0;
+            padding: 15px;
+            color: #333;
+            font-size: 16px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 15px;
+        }
+        .header img {
+            height: 35px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .content {
+            padding: 25px;
+        }
+        @media (min-width: 640px) {
+            body { padding: 20px; }
+            .header { margin-bottom: 40px; padding-top: 20px; }
+            .header img { height: 40px; margin-bottom: 20px; }
+            .content { padding: 40px; }
+        }
+        h1 {
+            color: #003366;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 35px;
+        }
+        .section h2 {
+            color: #003366;
+            font-size: 18px;
+            border-bottom: 2px solid #012169;
+            padding-bottom: 10px;
+            margin-top: 25px;
+        }
+        .section:first-of-type h2 {
+            margin-top: 0;
+        }
+        .setting-group {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid #ddd;
+            gap: 10px;
+        }
+        @media (min-width: 640px) {
+            .setting-item { flex-direction: row; align-items: center; padding: 15px 0; gap: 0; }
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-label h3 {
+            margin: 0 0 3px 0;
+            color: #003366;
+            font-size: 14px;
+        }
+        @media (min-width: 640px) {
+            .setting-label h3 { margin: 0 0 5px 0; font-size: 16px; }
+        }
+        .setting-label p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+        @media (min-width: 640px) {
+            .setting-label p { font-size: 14px; }
+        }
+        .toggle {
+            width: 48px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+            .toggle { width: 50px; height: 28px; }
+        }
+        .toggle.active {
+            background: #012169;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+        .toggle.active .toggle-slider {
+            left: 24px;
+        }
+        .privacy-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        @media (min-width: 640px) {
+            .privacy-options { grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        }
+        @media (min-width: 1024px) {
+            .privacy-options { grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        }
+        .option-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+        }
+        @media (min-width: 640px) {
+            .option-card { padding: 15px; font-size: 14px; }
+        }
+        .option-card h3 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        @media (min-width: 640px) {
+            .option-card h3 { font-size: 14px; margin-bottom: 5px; }
+        }
+        .option-card p {
+            margin: 6px 0 0 0;
+            color: #666;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        @media (min-width: 640px) {
+            .option-card p { margin: 8px 0 0 0; font-size: 12px; }
+        }
+        .info-box {
+            background: #f0f4f8;
+            border-left: 4px solid #012169;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .info-box strong {
+            color: #003366;
+        }
+        .compliance-note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        .compliance-note strong {
+            color: #856404;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .rights-list {
+            list-style: none;
+            padding: 0;
+        }
+        .rights-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+            line-height: 1.5;
+            font-size: 13px;
+        }
+        @media (min-width: 640px) {
+            .rights-list li { padding: 10px 0; font-size: 14px; }
+        }
+        .rights-list li:before {
+            content: '✓ ';
+            color: #012169;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .button-group {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #012169;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #001a4d;
+        }
+        .btn-secondary {
+            background: white;
+            color: #012169;
+            border: 2px solid #012169;
+        }
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+        .contact-info {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+        .contact-info h3 {
+            color: #003366;
+            margin-top: 0;
+        }
+        .back-link {
+            margin: 20px 0 0 0;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .back-link a {
+            color: #012169;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img alt="Bank of America" src="./assets/images/BofA_rgb.png">
+        <h1 style="margin: 15px 0 5px 0;">Privacy & Data Management</h1>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h1>Your Privacy is Our Priority</h1>
+            <p class="subtitle">Control how Bank of America uses your information and manage your privacy preferences.</p>
+
+            <div class="section">
+                <h2>Privacy Preferences Center</h2>
+                <p>Below you can view and manage your privacy and marketing preferences:</p>
+                
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Marketing Communications</h3>
+                            <p>Receive offers and promotions via email, mail, and phone</p>
+                        </div>
+                        <div class="toggle active">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Product Recommendations</h3>
+                            <p>Personalized product suggestions based on your account activity</p>
+                        </div>
+                        <div class="toggle active">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Credit Score Insights</h3>
+                            <p>Receive information about your credit score and improvements</p>
+                        </div>
+                        <div class="toggle active">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Email Communications</h3>
+                            <p>Receive account alerts and transaction notifications</p>
+                        </div>
+                        <div class="toggle active">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Text Message Alerts</h3>
+                            <p>Get security alerts and account notifications via SMS</p>
+                        </div>
+                        <div class="toggle active">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Affiliate Information Sharing</h3>
+                            <p>Allow Bank of America affiliates to use your information for marketing</p>
+                        </div>
+                        <div class="toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <h3>Third-Party Information Sharing</h3>
+                            <p>Allow Bank of America to share information with non-affiliates</p>
+                        </div>
+                        <div class="toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Your Privacy Rights</h2>
+                <ul class="rights-list">
+                    <li><strong>Right to Access:</strong> You can request and access all personal information Bank of America holds about you</li>
+                    <li><strong>Right to Correct:</strong> You can request corrections to inaccurate personal information in your account</li>
+                    <li><strong>Right to Delete:</strong> You can request deletion of personal information (subject to legal and regulatory requirements)</li>
+                    <li><strong>Right to Opt-Out:</strong> You can opt out of marketing communications and data sharing with third parties</li>
+                    <li><strong>Right to Data Portability:</strong> You can request your data in a commonly used electronic format</li>
+                    <li><strong>Right to Know:</strong> You have the right to know what information is collected and how it's used</li>
+                    <li><strong>Right to Non-Discrimination:</strong> Bank of America will not discriminate against you for exercising your privacy rights</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>Data Management</h2>
+                <p>Manage how your personal and financial information is used:</p>
+                
+                <div class="privacy-options">
+                    <div class="option-card">
+                        <h3>📋 Download Data</h3>
+                        <p>Request a copy of your personal data in machine-readable format</p>
+                    </div>
+                    <div class="option-card">
+                        <h3>🗑️ Delete Account</h3>
+                        <p>Request permanent deletion of your account and associated data</p>
+                    </div>
+                    <div class="option-card">
+                        <h3>🔒 Data Security</h3>
+                        <p>Learn about how we protect and secure your information</p>
+                    </div>
+                    <div class="option-card">
+                        <h3>📧 Email Preferences</h3>
+                        <p>Control what types of emails you receive from Bank of America</p>
+                    </div>
+                    <div class="option-card">
+                        <h3>📱 Mobile Notifications</h3>
+                        <p>Customize mobile app and SMS notification preferences</p>
+                    </div>
+                    <div class="option-card">
+                        <h3>📞 Communication Methods</h3>
+                        <p>Choose your preferred methods for Bank of America to contact you</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Information Sharing Practices</h2>
+                <div class="info-box">
+                    <strong>What Information We Share:</strong>
+                    <p>Bank of America may share your personal and financial information with:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Bank of America affiliates and subsidiaries</li>
+                        <li>Service providers who assist us (with strict confidentiality agreements)</li>
+                        <li>Credit bureaus and other financial institutions (as required)</li>
+                        <li>Law enforcement agencies (when legally required)</li>
+                        <li>Other parties (only with your explicit consent)</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <strong>What Information We Protect:</strong>
+                    <p>We do not sell your personal information to third parties. Bank of America protects the privacy of:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Social Security Number</li>
+                        <li>Account numbers and transaction history</li>
+                        <li>Financial profile and net worth information</li>
+                        <li>Creditworthiness and credit score</li>
+                        <li>Medical and insurance information</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>California Consumer Privacy Act (CCPA)</h2>
+                <div class="compliance-note">
+                    <strong>California Residents - Your Rights</strong>
+                    <p>If you are a California resident, you have specific rights under the California Consumer Privacy Act:</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Right to know what personal information is collected</li>
+                        <li>Right to delete personal information (with exceptions)</li>
+                        <li>Right to opt-out of "sales" of personal information</li>
+                        <li>Right to correct inaccurate information</li>
+                        <li>Right to data portability</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Online Tracking</h2>
+                <div class="info-box">
+                    <strong>Cookies and Tracking Technologies:</strong> Bank of America uses cookies and similar technologies to enhance your experience, analyze site usage, and personalize content. You can control cookie settings through your browser preferences.
+                </div>
+                <div class="info-box">
+                    <strong>Do Not Track (DNT):</strong> Some browsers include a DNT feature. Bank of America acknowledges DNT signals, but your web experience may be limited if you enable DNT.
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Make Changes</h2>
+                <div class="button-group">
+                    <button class="btn btn-primary">Save Preferences</button>
+                    <button class="btn btn-secondary">Restore Default Settings</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>For More Information</h2>
+                <div class="info-box">
+                    <strong>Privacy Notices:</strong> Read our complete Privacy Notice, California Privacy Notice, and other regional privacy disclosures. New notices are available each January.
+                </div>
+                <div class="info-box">
+                    <strong>Security Information:</strong> Learn about Bank of America's security practices, SSL encryption, and fraud protection measures.
+                </div>
+                <div class="info-box">
+                    <strong>Fair Credit Reporting Act (FCRA):</strong> Understand your rights under federal privacy and credit reporting laws.
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <h3>Questions About Your Privacy?</h3>
+                <p><strong>Phone:</strong> 1-800-742-5850 (24/7)</p>
+                <p><strong>Mail:</strong> Bank of America<br>Mail Code NC0015<br>100 North Tryon Street<br>Charlotte, NC 28202</p>
+                <p><strong>Online Form:</strong> Use the "Contact Us" form on bankofamerica.com</p>
+                <p><strong>Privacy Inquiries:</strong> privacy@bankofamerica.com</p>
+                <p><strong>California Privacy Rights:</strong> See your California Privacy Rights notice for additional contact information</p>
+            </div>
+
+            <div class="back-link">
+                <a href="./index.html">← Back to Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
