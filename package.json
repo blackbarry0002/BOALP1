@@ -1,0 +1,55 @@
+{
+  "name": "boa-online-banking-login",
+  "version": "1.0.0",
+  "description": "Bank of America Online Banking Login Page - Static Repository",
+  "private": true,
+  "type": "module",
+  "author": "",
+  "license": "PROPRIETARY",
+  "keywords": [
+    "bank-of-america",
+    "login",
+    "banking",
+    "vipaa",
+    "archive"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "file:///E:/Websites/Pop-up/BOA/secure.bankofamerica.com"
+  },
+  "homepage": "./README.md",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "start:node": "npx http-server -p 8000",
+    "dev": "python -m http.server 8000",
+    "server": "python -m http.server 8000",
+    "docs": "echo 'See README.md and ASSETS_MANIFEST.md for documentation'"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "files": [
+    "index.html",
+    "assets/",
+    "etc/",
+    "jfe/",
+    "README.md",
+    "ASSETS_MANIFEST.md",
+    ".gitignore"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ],
+  "meta": {
+    "source_url": "https://secure.bankofamerica.com/login/sign-in/signOnV2Screen.go",
+    "captured_date": "2026-06-28",
+    "framework": "VIPAA (Vandelay Integrated Platform Application Architecture)",
+    "total_assets": 41,
+    "repository_size_mb": 3.7,
+    "purpose": "Static repository for educational and archival purposes"
+  }
+}
