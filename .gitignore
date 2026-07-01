@@ -95,3 +95,5 @@ site/
 !README.md
 !ASSETS_MANIFEST.md
 !package.json
+.vercel
+.env*
