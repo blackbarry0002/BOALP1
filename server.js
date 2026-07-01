@@ -73,6 +73,16 @@ app.get('/api/debug', (req, res) => {
   });
 });
 
+// Explicit static file routes (needed for Vercel serverless)
+app.get(/^\/assets\//, (req, res) => {
+  const filepath = path.join(__dirname, req.path);
+  res.sendFile(filepath, (err) => {
+    if (err) {
+      res.status(404).end();
+    }
+  });
+});
+
 // Static files middleware - AFTER API routes
 app.use(express.static(path.join(__dirname)));
 
