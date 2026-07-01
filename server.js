@@ -97,7 +97,7 @@ try {
 // Local CSV Logger Configuration (uses /tmp on Vercel, ./logs locally)
 const logsDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, 'logs');
 try {
-  if (!fs.existsSync(logsDir)) {
+  if (!process.env.VERCEL && !fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
   }
 } catch (error) {
@@ -250,6 +250,16 @@ app.get('/api/logs', async (req, res) => {
 // Serve index.html by default
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Explicit dashboard route
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// Explicit dashboard route (without extension)
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 // Error handling middleware (must be last)
