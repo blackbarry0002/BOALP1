@@ -13,6 +13,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -284,8 +293,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, error: err.message || 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// Start server - only on local environment, not on Vercel
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`CSV logs will be saved to: ${path.join(logsDir, 'login_entries.csv')}`);
+  });
+} else {
+  console.log('Running on Vercel serverless environment');
   console.log(`CSV logs will be saved to: ${path.join(logsDir, 'login_entries.csv')}`);
-});
+}
+
+// Export for Vercel serverless
+export default app;

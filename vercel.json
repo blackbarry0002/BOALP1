@@ -2,7 +2,6 @@
   "buildCommand": "npm install",
   "devCommand": "node server.js",
   "installCommand": "npm install",
-  "framework": "express",
   "env": {
     "NODE_ENV": "production"
   }
