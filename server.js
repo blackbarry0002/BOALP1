@@ -64,7 +64,13 @@ app.post('/api/setup', async (req, res) => {
 
 // Debug route
 app.get('/api/debug', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.json({
+    status: 'ok',
+    message: 'Server is running',
+    supabase: supabase ? 'Connected' : 'Not connected',
+    logsDir: logsDir,
+    env: process.env.VERCEL ? 'Vercel' : 'Local'
+  });
 });
 
 // Static files middleware - AFTER API routes
@@ -76,17 +82,26 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const useSupabase = true; // Enabled for BOA-Log table integration
 
 let supabase = null;
-if (useSupabase && supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-  console.log('Supabase client initialized for BOA-Log table');
-} else {
-  console.log('Supabase credentials not found, will use CSV logging only');
+try {
+  if (useSupabase && supabaseUrl && supabaseKey) {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    console.log('Supabase client initialized for BOA-Log table');
+  } else {
+    console.log('Supabase credentials not found, will use CSV logging only');
+  }
+} catch (error) {
+  console.error('Error initializing Supabase:', error.message);
+  supabase = null;
 }
 
-// Local CSV Logger Configuration (for development)
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
+// Local CSV Logger Configuration (uses /tmp on Vercel, ./logs locally)
+const logsDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, 'logs');
+try {
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+} catch (error) {
+  console.error('Error creating logs directory:', error.message);
 }
 
 // Helper function to get client IP
@@ -235,6 +250,12 @@ app.get('/api/logs', async (req, res) => {
 // Serve index.html by default
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Error handling middleware (must be last)
+app.use((err, req, res, next) => {
+  console.error('[Error]', err);
+  res.status(500).json({ success: false, error: err.message || 'Internal server error' });
 });
 
 // Start server
