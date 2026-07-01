@@ -143,13 +143,40 @@ function initializeApp() {
     }
   });
 
-  // Serve static HTML files
+  // Serve static assets FIRST (before catch-all routes)
+  app.use(express.static(projectRoot, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
+      if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
+      if (filePath.endsWith('.svg')) res.setHeader('Content-Type', 'image/svg+xml');
+      if (filePath.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
+      if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
+      if (filePath.endsWith('.gif')) res.setHeader('Content-Type', 'image/gif');
+      if (filePath.endsWith('.ico')) res.setHeader('Content-Type', 'image/x-icon');
+      if (filePath.endsWith('.woff')) res.setHeader('Content-Type', 'font/woff');
+      if (filePath.endsWith('.woff2')) res.setHeader('Content-Type', 'font/woff2');
+      if (filePath.endsWith('.ttf')) res.setHeader('Content-Type', 'font/ttf');
+      if (filePath.endsWith('.eot')) res.setHeader('Content-Type', 'application/vnd.ms-fontobject');
+    }
+  }));
+
+  // Serve root
   app.get('/', (req, res) => {
     const indexPath = path.join(projectRoot, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
       res.status(404).send('index.html not found');
+    }
+  });
+
+  // Serve specific HTML files
+  app.get('/dashboard.html', (req, res) => {
+    const dashPath = path.join(projectRoot, 'dashboard.html');
+    if (fs.existsSync(dashPath)) {
+      res.sendFile(dashPath);
+    } else {
+      res.status(404).send('dashboard.html not found');
     }
   });
 
@@ -162,19 +189,13 @@ function initializeApp() {
     }
   });
 
-  // Serve static assets
-  app.use(express.static(projectRoot, {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
-      if (path.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
-      if (path.endsWith('.svg')) res.setHeader('Content-Type', 'image/svg+xml');
-      if (path.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
-      if (path.endsWith('.jpg') || path.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
-    }
-  }));
-
-  // Catch-all for HTML routes
+  // Catch-all for other HTML routes (must come LAST)
   app.get('/:page', (req, res) => {
+    // Skip if path looks like a file with extension
+    if (req.params.page.includes('.')) {
+      return res.status(404).send('Not found');
+    }
+    
     const pagePath = path.join(projectRoot, `${req.params.page}.html`);
     if (fs.existsSync(pagePath)) {
       res.sendFile(pagePath);
