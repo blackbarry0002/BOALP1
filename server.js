@@ -125,17 +125,38 @@ app.get('/api/logs', async (req, res) => {
     const logsFile = path.join(logsDir, 'login_entries.csv');
     if (fs.existsSync(logsFile)) {
       const logs = fs.readFileSync(logsFile, 'utf8');
-      // Parse CSV into JSON for easier consumption
+      // Parse CSV into JSON with proper handling of quoted fields
       const lines = logs.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',');
+      const headers = lines[0].split(',').map(h => h.trim());
+      
       const data = lines.slice(1).map(line => {
-        const values = line.match(/(?:[^,"]+|"[^"]*")+/g) || [];
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          const nextChar = line[i + 1];
+          
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim().replace(/^"|"$/g, ''));
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        // Don't forget the last field
+        values.push(current.trim().replace(/^"|"$/g, ''));
+        
         const obj = {};
         headers.forEach((header, i) => {
-          obj[header.trim()] = values[i]?.replace(/^"|"$/g, '').trim() || '';
+          obj[header] = values[i] || '';
         });
         return obj;
       });
+      
       res.json({
         success: true,
         data: data,
