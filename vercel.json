@@ -15,15 +15,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "envVars": [
-    {
-      "key": "SUPABASE_URL",
-      "value": "@supabase_url"
-    },
-    {
-      "key": "SUPABASE_ANON_KEY",
-      "value": "@supabase_anon_key"
-    }
-  ]
+  }
 }
