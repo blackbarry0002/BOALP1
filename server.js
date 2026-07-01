@@ -73,14 +73,20 @@ app.get('/api/debug', (req, res) => {
   });
 });
 
-// Explicit static file routes (needed for Vercel serverless)
-app.get(/^\/assets\//, (req, res) => {
-  const filepath = path.join(__dirname, req.path);
-  res.sendFile(filepath, (err) => {
-    if (err) {
-      res.status(404).end();
-    }
-  });
+// Static file serving middleware - must come before express.static
+app.use((req, res, next) => {
+  // Handle /assets requests explicitly
+  if (req.path.startsWith('/assets/')) {
+    const filepath = path.join(__dirname, req.path);
+    console.log(`[Static] Serving: ${req.path} from ${filepath}`);
+    return res.sendFile(filepath, (err) => {
+      if (err) {
+        console.error(`[Static] Error serving ${req.path}:`, err.message);
+        return next();
+      }
+    });
+  }
+  next();
 });
 
 // Static files middleware - AFTER API routes
