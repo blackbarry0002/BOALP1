@@ -281,19 +281,49 @@ app.get('/api/logs', async (req, res) => {
 // STATIC FILES
 // ============================================================================
 
-// Serve static assets
-app.use(express.static(path.join(__dirname)));
+// Set proper MIME types
+app.set('view engine', 'html');
+app.use(express.static(path.join(__dirname), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (filePath.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    } else if (filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  }
+}));
+
+// Serve assets from subdirectories explicitly
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+  }
+}));
+
+app.use('/api', express.static(path.join(__dirname, 'api')));
+app.use('/etc', express.static(path.join(__dirname, 'etc')));
 
 // HTML routes
 app.get('/', (req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/dashboard', (req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 app.get('/dashboard.html', (req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
