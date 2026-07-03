@@ -27,15 +27,25 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const useSupabase = !!(supabaseUrl && supabaseKey);
 
 let supabase = null;
+let supabaseError = null;
 try {
   if (useSupabase) {
+    if (!supabaseUrl || supabaseUrl.includes('undefined')) {
+      throw new Error('SUPABASE_URL is undefined or invalid: ' + supabaseUrl);
+    }
+    if (!supabaseKey || supabaseKey.includes('undefined')) {
+      throw new Error('SUPABASE_ANON_KEY is undefined or invalid');
+    }
     supabase = createClient(supabaseUrl, supabaseKey);
     console.log('[Supabase] Client initialized successfully');
   } else {
     console.log('[Supabase] Not configured - using CSV logging only');
+    console.log('[Supabase] SUPABASE_URL:', !!supabaseUrl, 'SUPABASE_ANON_KEY:', !!supabaseKey);
   }
 } catch (error) {
-  console.error('[Supabase] Initialization error:', error.message);
+  supabaseError = error.message || String(error);
+  console.error('[Supabase] Initialization error:', supabaseError);
+  console.error('[Supabase] Full error:', error);
 }
 
 // 2. Initialize logs directory
@@ -196,6 +206,7 @@ app.get('/api/debug', (req, res) => {
     supabase_url_set: !!process.env.SUPABASE_URL,
     supabase_key_set: !!process.env.SUPABASE_ANON_KEY,
     supabase_client_exists: !!supabase,
+    supabase_error: supabaseError || 'None',
     logsDir: logsDir,
     csvLogsPath: path.join(logsDir, 'login_entries.csv'),
     deployment: process.env.VERCEL ? 'Vercel' : 'Local'
