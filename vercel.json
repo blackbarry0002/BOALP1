@@ -5,18 +5,5 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "public": true,
-  "files": [
-    "server.js",
-    "favicon.svg",
-    "index.html",
-    "dashboard.html",
-    "login-reset.html",
-    "enroll.html",
-    "privacy.html",
-    "info.html",
-    "assets/**",
-    "etc/**",
-    "package.json"
-  ]
+  "public": true
 }
