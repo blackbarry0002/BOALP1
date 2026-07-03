@@ -291,6 +291,8 @@ app.use(express.static(path.join(__dirname), {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     } else if (filePath.endsWith('.html')) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    } else if (filePath.endsWith('.svg')) {
+      res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
     } else if (filePath.endsWith('.png') || filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
       res.setHeader('Cache-Control', 'public, max-age=3600');
     }
@@ -310,6 +312,12 @@ app.use('/assets', express.static(path.join(__dirname, 'assets'), {
 
 app.use('/api', express.static(path.join(__dirname, 'api')));
 app.use('/etc', express.static(path.join(__dirname, 'etc')));
+
+// Favicon route
+app.get('/favicon.svg', (req, res) => {
+  res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'favicon.svg'));
+});
 
 // HTML routes
 app.get('/', (req, res) => {
