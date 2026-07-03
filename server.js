@@ -6,7 +6,11 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config();
+// On Vercel, explicitly load .env.production if it exists
+const envFile = process.env.VERCEL ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
+// Also try to load plain .env as fallback
+dotenv.config({ path: '.env' });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
