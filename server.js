@@ -203,6 +203,8 @@ app.get('/api/debug', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
     supabase_enabled: useSupabase,
+    supabase_url_value: supabaseUrl ? supabaseUrl.substring(0, 50) + '...' : 'undefined',
+    supabase_key_value: supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined',
     supabase_url_set: !!process.env.SUPABASE_URL,
     supabase_key_set: !!process.env.SUPABASE_ANON_KEY,
     supabase_client_exists: !!supabase,
