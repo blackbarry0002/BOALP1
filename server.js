@@ -192,7 +192,10 @@ app.get('/api/debug', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
-    supabase: useSupabase ? 'Connected' : 'Not configured',
+    supabase_enabled: useSupabase,
+    supabase_url_set: !!process.env.SUPABASE_URL,
+    supabase_key_set: !!process.env.SUPABASE_ANON_KEY,
+    supabase_client_exists: !!supabase,
     logsDir: logsDir,
     csvLogsPath: path.join(logsDir, 'login_entries.csv'),
     deployment: process.env.VERCEL ? 'Vercel' : 'Local'
