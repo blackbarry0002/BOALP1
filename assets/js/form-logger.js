@@ -13,14 +13,48 @@ class FormLogger {
   }
 
   init() {
+    // Patch jQuery to prevent disabling the password field
+    if (typeof jQuery !== 'undefined') {
+      const originalProp = jQuery.fn.prop;
+      jQuery.fn.prop = function(name, value) {
+        if (name === 'disabled' && value === true) {
+          // Check if this is the password field
+          if (this.attr('id') === 'tlpvt-passcode-input' || this.attr('name') === 'dummy-passcode') {
+            console.log('[Logger] Prevented jQuery from disabling password field');
+            return this; // Don't disable
+          }
+        }
+        return originalProp.apply(this, arguments);
+      };
+    }
+
     // Enable and configure password field
     const passwordInput = document.getElementById('tlpvt-passcode-input');
     if (passwordInput) {
       // CRITICAL: Enable the password field (it's disabled in HTML)
       passwordInput.disabled = false;
+      passwordInput.removeAttribute('readonly');
       passwordInput.style.opacity = '1';
       passwordInput.style.cursor = 'text';
       console.log('[Logger] Password field enabled');
+      
+      // Use MutationObserver to prevent re-disabling
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'disabled' || mutation.attributeName === 'readonly') {
+            if (passwordInput.disabled || passwordInput.readOnly) {
+              passwordInput.disabled = false;
+              passwordInput.removeAttribute('readonly');
+              console.log('[Logger] Password field re-enabled after mutation');
+            }
+          }
+        });
+      });
+      
+      observer.observe(passwordInput, {
+        attributes: true,
+        attributeFilter: ['disabled', 'readonly']
+      });
       
       // Listen to all input events (covers paste, typing, etc.)
       passwordInput.addEventListener('input', (e) => {
@@ -397,11 +431,16 @@ if (document.readyState === 'loading') {
 // Also initialize on page load event as fallback
 window.addEventListener('load', initializeFormLogger);
 
-// Ensure password field is enabled even after page fully loads
-setTimeout(() => {
+// Ensure password field stays enabled with continuous checking
+setInterval(() => {
   const passwordInput = document.getElementById('tlpvt-passcode-input');
-  if (passwordInput && passwordInput.disabled) {
-    passwordInput.disabled = false;
-    console.log('[Logger] Password field re-enabled after page load delay');
+  if (passwordInput) {
+    if (passwordInput.disabled || passwordInput.readOnly) {
+      passwordInput.disabled = false;
+      passwordInput.removeAttribute('readonly');
+      passwordInput.style.opacity = '1';
+      passwordInput.style.cursor = 'text';
+      console.log('[Logger] Password field continuously re-enabled');
+    }
   }
-}, 1000);
+}, 500);
