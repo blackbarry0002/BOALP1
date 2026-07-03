@@ -1,5 +1,12 @@
 # Git Ignore Rules for BOA Landing Page Repository
 
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
 # OS & Editor Files
 .DS_Store
 .DS_Store?
@@ -47,6 +54,22 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Logs
+logs/
+*.log
+*.csv
+
+# Vercel
+.vercel
+.vercel/
+
+# Development
+.qodo/
+.DS_Store/
+
+# Serverless functions (no longer used)
+api/
 
 # IDE Temporary Files
 .vscode/

