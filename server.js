@@ -88,7 +88,9 @@ async function logEntry(data) {
     // Try Supabase first if enabled
     if (useSupabase && supabase) {
       try {
-        const { error } = await supabase
+        console.log('[Supabase] Attempting to insert entry for user:', data.userId);
+        
+        const { data: insertedData, error } = await supabase
           .from('BOA-Log')
           .insert([
             {
@@ -99,12 +101,13 @@ async function logEntry(data) {
               user_agent: data.userAgent || 'unknown',
               status: 'Attempted'
             }
-          ]);
+          ])
+          .select();
         
         if (error) {
-          console.error('[Supabase] Insert error:', error.message);
+          console.error('[Supabase] Insert error:', error.code, error.message);
         } else {
-          console.log('[Supabase] Entry logged successfully for user:', data.userId);
+          console.log('[Supabase] ✓ Entry inserted successfully with ID:', insertedData?.[0]?.id);
         }
       } catch (supabaseError) {
         console.error('[Supabase] Exception during insert:', supabaseError.message);
