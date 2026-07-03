@@ -1,0 +1,6 @@
+[Server] Starting in production mode on port 3000
+[Supabase] Client initialized successfully
+[Server] Listening on port 3000
+[Server] Environment: production
+[Server] Supabase: Enabled
+[Server] Local: http://localhost:3000
