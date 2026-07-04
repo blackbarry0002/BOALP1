@@ -76,7 +76,14 @@ function captureNow() {
 
 // Show error message with captured credentials
 function showError() {
-  window.scrollTo(0, 0);
+  try {
+    if (window && window.scrollTo) {
+      window.scrollTo(0, 0);
+    }
+  } catch (e) {
+    console.log('[FL] Could not scroll');
+  }
+  
   const existing = document.querySelector('.error-state');
   if (existing) existing.remove();
   
