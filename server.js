@@ -315,7 +315,7 @@ app.post('/api/cleanup', async (req, res) => {
     // Create a client with service role key if available (to bypass RLS)
     let clientForDelete = supabase;
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      clientForDelete = supabase.createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      clientForDelete = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
       console.log('[/api/cleanup] Using service role key for deletion');
     }
 
