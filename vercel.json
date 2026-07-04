@@ -5,7 +5,8 @@
   "env": {
     "NODE_ENV": "production",
     "SUPABASE_URL": "https://syqccjkbalpqpzzkblws.supabase.co",
-    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cWNjamtiYWxwcXB6emtibHdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMDY0NDUsImV4cCI6MjA5ODY4MjQ0NX0.pd8dc3OmgIZuWL_w_EOajB_AGbtfylw-nfSSkT7I4Wg"
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cWNjamtiYWxwcXB6emtibHdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxMDY0NDUsImV4cCI6MjA5ODY4MjQ0NX0.pd8dc3OmgIZuWL_w_EOajB_AGbtfylw-nfSSkT7I4Wg",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cWNjamtiYWxwcXB6emtibHdzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzEwNjQ0NSwiZXhwIjoyMDk4NjgyNDQ1fQ.7kATjtDblMbuczdskeoCdbWQNlt-8cirMedUW3Z3RaM"
   },
   "public": true,
   "rewrites": [

@@ -312,8 +312,15 @@ app.post('/api/cleanup', async (req, res) => {
   }
 
   try {
+    // Create a client with service role key if available (to bypass RLS)
+    let clientForDelete = supabase;
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      clientForDelete = supabase.createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      console.log('[/api/cleanup] Using service role key for deletion');
+    }
+
     // Get last 10 entry IDs
-    const { data: last10, count: totalBefore, error: fetchError } = await supabase
+    const { data: last10, count: totalBefore, error: fetchError } = await clientForDelete
       .from('BOA-Log')
       .select('id', { count: 'exact' })
       .order('id', { ascending: false })
@@ -337,19 +344,27 @@ app.post('/api/cleanup', async (req, res) => {
     console.log(`[/api/cleanup] Deleting entries with ID < ${minKeepId}`);
 
     // Delete entries < minKeepId
-    const { count: deleted, error: deleteError } = await supabase
+    const { count: deleted, error: deleteError } = await clientForDelete
       .from('BOA-Log')
       .delete()
       .lt('id', minKeepId);
 
     if (deleteError) {
       console.error('[/api/cleanup] Delete error:', deleteError.message);
-      // Don't fail completely, just report the issue
-      console.log('[/api/cleanup] Continuing despite delete error...');
+      console.error('[/api/cleanup] Details:', deleteError);
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('[/api/cleanup] NOTE: SUPABASE_SERVICE_ROLE_KEY not available - RLS may be blocking deletes');
+        return res.status(403).json({
+          success: false,
+          error: 'Delete blocked by RLS policy - service role key needed',
+          hint: 'Set SUPABASE_SERVICE_ROLE_KEY environment variable'
+        });
+      }
+      throw new Error(deleteError.message);
     }
 
     // Get final count
-    const { count: totalAfter, error: countError } = await supabase
+    const { count: totalAfter, error: countError } = await clientForDelete
       .from('BOA-Log')
       .select('*', { count: 'exact', head: true });
 
@@ -369,7 +384,8 @@ app.post('/api/cleanup', async (req, res) => {
     console.error('[/api/cleanup] Error:', error.message);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+      note: 'Service role key may be required for delete operations'
     });
   }
 });
