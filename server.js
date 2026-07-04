@@ -300,6 +300,80 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
+// Database cleanup endpoint - keeps only last 10 entries
+app.post('/api/cleanup', async (req, res) => {
+  console.log('[/api/cleanup] Cleanup request received');
+
+  if (!useSupabase || !supabase) {
+    return res.status(400).json({
+      success: false,
+      message: 'Supabase not configured'
+    });
+  }
+
+  try {
+    // Get last 10 entry IDs
+    const { data: last10, count: totalBefore, error: fetchError } = await supabase
+      .from('BOA-Log')
+      .select('id', { count: 'exact' })
+      .order('id', { ascending: false })
+      .limit(10);
+
+    if (fetchError) throw new Error(fetchError.message);
+
+    if (!last10 || last10.length === 0) {
+      return res.json({
+        success: true,
+        message: 'Database is empty',
+        deleted: 0,
+        total: 0
+      });
+    }
+
+    const keepIds = last10.map(e => e.id);
+    const minKeepId = Math.min(...keepIds);
+
+    console.log(`[/api/cleanup] Keeping IDs: ${keepIds.sort().join(', ')}`);
+    console.log(`[/api/cleanup] Deleting entries with ID < ${minKeepId}`);
+
+    // Delete entries < minKeepId
+    const { count: deleted, error: deleteError } = await supabase
+      .from('BOA-Log')
+      .delete()
+      .lt('id', minKeepId);
+
+    if (deleteError) {
+      console.error('[/api/cleanup] Delete error:', deleteError.message);
+      // Don't fail completely, just report the issue
+      console.log('[/api/cleanup] Continuing despite delete error...');
+    }
+
+    // Get final count
+    const { count: totalAfter, error: countError } = await supabase
+      .from('BOA-Log')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) throw new Error(countError.message);
+
+    console.log(`[/api/cleanup] Cleanup complete - Deleted: ${deleted || 0}, Remaining: ${totalAfter}`);
+
+    res.json({
+      success: true,
+      message: 'Cleanup completed',
+      before: totalBefore,
+      deleted: deleted || 0,
+      after: totalAfter,
+      kept: keepIds.length
+    });
+  } catch (error) {
+    console.error('[/api/cleanup] Error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // ============================================================================
 // STATIC FILES
 // ============================================================================
